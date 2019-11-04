@@ -56,7 +56,7 @@ function parse_file(filename::String)::Vector{Problem}
         append!(new_problems, [problems[i] for i in offset:6:90])
     end
 
-    return new_problems
+    return problems
 end
 
 function next_line(file::IOStream)

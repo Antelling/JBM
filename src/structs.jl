@@ -14,3 +14,12 @@ struct Problem
 end
 
 function identity(x, y) return x end
+
+function contains(pop::Population, sol::Solution)
+    for s in pop
+        if sol.bitlist == s.bitlist
+            return true
+        end
+    end
+    return false
+end 

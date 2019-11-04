@@ -5,7 +5,7 @@ permutation and add items if they don't violate any dimension constraints.
 Check if it is valid. Then, using the same permuation, loop through and remove
 items as long as it wouldn't violate any demand constraints. """
 function greedy_construct(problem::Problem, n_solutions::Int=50; ls::Function=VND,
-            max_time::Int=60)::Population
+            max_time::Int=60, force_valid::Bool=true)::Population
     n_dimensions = length(problem.objective)
 
     valid_solutions = Set{Solution}()
@@ -31,6 +31,7 @@ function greedy_construct(problem::Problem, n_solutions::Int=50; ls::Function=VN
                 bl[i] = true
             end
         end
+
         #we have now generated a bitlist, and we know the dimension constraints
         #are all satisfied
         #we will now pass this bitlist to the search function, that will use
@@ -39,7 +40,7 @@ function greedy_construct(problem::Problem, n_solutions::Int=50; ls::Function=VN
         #are satisfied to the ls function. However, this code is so much shorter
         #I don't care.
         sol::Solution = ls(bl, problem)
-        if sol.score > 0 #if it is infeasible, it has a negative objective value
+        if (!force_valid || sol.score > 0)
             push!(valid_solutions, sol)
         end
 
@@ -65,7 +66,7 @@ function greedy_construct(problem::Problem, n_solutions::Int=50; ls::Function=VN
             end
         end
         sol = ls(bl, problem)
-        if sol.score > 0 #if it is infeasible, it has a negative objective value
+        if !force_valid || sol.score > 0 #if it is infeasible, it has a negative objective value
             push!(valid_solutions, sol)
         end
     end

@@ -70,7 +70,7 @@ function P_meta_coord(
             end
 
             #check if the new solution is better than the lowest of the parent solutions
-            if new_sol.score > population[lowest_found_index].score
+            if new_sol.score > population[lowest_found_index].score && !contains(population, new_sol)
                 population[lowest_found_index] = new_sol
             end
 
