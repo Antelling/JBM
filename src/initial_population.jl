@@ -72,3 +72,23 @@ function greedy_construct(problem::Problem, n_solutions::Int=50; ls::Function=VN
     end
     return collect(valid_solutions)
 end
+
+"""if we sample with a biased probability, a normal distribution of turned on
+bits will be created. Our bias directly informs the mean. The number of
+variables informs the standard deviation."""
+function random_init(problem::Problem, n_solutions::Int=50;
+        ls::Function=make_solution, max_time::Int=60, force_valid::Bool=true)
+    r = get_solution_range(problem)
+    v = length(problem.objective)
+    percentage = sum(r)/(2v)
+    valid_solutions = Set{Solution}()
+    start_time = time()
+    while length(valid_solutions) < n_solutions && time() - start_time < max_time
+        bl::BitList = map(i->i<percentage, rand(v))
+        sol::Solution = ls(bl, problem)
+        if !force_valid || sol.score > 0
+            push!(valid_solutions, sol)
+        end
+    end
+    return collect(valid_solutions)
+end
