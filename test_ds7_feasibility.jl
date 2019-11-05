@@ -6,10 +6,10 @@ function go()
 
 	    for p in 1:length(problems)
 			problem = problems[p]
-	        pop::Population = greedy_construct(problem, 180, ls=local_swap, force_valid=false)
+	        pop::Population = greedy_construct(problem, 180, ls=VND, force_valid=false)
 
 			while(count_valid(pop, problem) < 1)
-				P_meta_coord(pop, problem, local_swap, column_average_chances, use_random=true, random_n=1, time_limit=1)
+				P_meta_coord(pop, problem, VND, column_average_chances, use_random=true, random_n=1, time_limit=1)
 			end
 
 			println("$p: $(get_representation(get_best_solution(pop)))")

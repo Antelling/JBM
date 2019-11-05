@@ -14,3 +14,14 @@ A collection of metaheuristics capable of approximately solving large binary pro
 * VND
   * Swap Neighborhood
   * Flip Neighborhood
+
+# Todo:
+
+1. adapt local flip to new score scheme
+2. adapt P-meta-coord to allow transformers to return numerous samples
+3. implement transformers for missing metas
+4. implement move-repair mutator
+5. benchmark VND
+6. adapt p-meta-coord to allow for hybrid methods
+7. implement generic closure
+8. implement optimizer pogo coord 
