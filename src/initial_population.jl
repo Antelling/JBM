@@ -14,7 +14,7 @@ function greedy_construct(problem::Problem, n_solutions::Int=50; ls::Function=VN
 
         order = randperm(n_dimensions)
 
-        bl::BitList = zeros(Int, n_dimensions)
+        bl::BitArray = zeros(Int, n_dimensions)
         dimensions = zeros(Int, length(problem.upper_bounds))
         for i in order
             valid = true
@@ -48,7 +48,7 @@ function greedy_construct(problem::Problem, n_solutions::Int=50; ls::Function=VN
             break
         end
 
-        demand_solution::BitList = ones(Int, n_dimensions)
+        demand_solution::BitArray = ones(Int, n_dimensions)
         dimensions = [sum(bound[1]) for bound in problem.lower_bounds]
         for i in order
             valid = true
@@ -84,7 +84,7 @@ function random_init(problem::Problem, n_solutions::Int=50;
     valid_solutions = Set{Solution}()
     start_time = time()
     while length(valid_solutions) < n_solutions && time() - start_time < max_time
-        bl::BitList = map(i->i<percentage, rand(v))
+        bl::BitArray = map(i->i<percentage, rand(v))
         sol::Solution = ls(bl, problem)
         if !force_valid || sol.score > 0
             push!(valid_solutions, sol)

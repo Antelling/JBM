@@ -1,7 +1,5 @@
-BitList = Vector{Bool}
-
 struct Solution
-    bitlist::BitList
+    bitlist::BitArray
     score::Int64
 end
 
@@ -22,4 +20,4 @@ function contains(pop::Population, sol::Solution)
         end
     end
     return false
-end 
+end

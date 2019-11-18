@@ -9,7 +9,7 @@ Dominance Principle was adapted to MDMKP in
         Referred to as paper 2
 """
 
-function DPH(problem::Problem)
+function _DPH(problem::Problem)
     #steps taken from fig 1 in paper 1
 
     n = length(problem.objective) #number of dimensions, width of coeff matrix, length of bitlist
@@ -18,7 +18,7 @@ function DPH(problem::Problem)
 
 
     #step 1
-    solution::BitList = falses(n)
+    solution::BitArray = falses(n)
 
     while(true)
         #step 2
@@ -74,7 +74,7 @@ function DPH(problem::Problem)
 
             end
         end
-        
+
         if(sum(A) == 0)
             break
         end

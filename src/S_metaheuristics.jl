@@ -21,7 +21,7 @@ function local_swap(sol::Solution, problem::Problem)::Solution
 end
 
 """Apply the local_swap search to a single bitlist"""
-function local_swap(bl::BitList, problem::Problem)::Solution
+function local_swap(bl::BitArray, problem::Problem)::Solution
     return local_swap(make_solution(bl, problem), problem)
 end
 
@@ -33,7 +33,7 @@ function _individual_swap(solution::Solution, problem::Problem; only_repair::Boo
     lower_values::Vector{Int} = [sum(bl .* bound[1]) for bound in problem.lower_bounds]
 
     best_found_objective = objective_value
-    best_found_bitlist::BitList = bl
+    best_found_bitlist::BitArray = bl
 
     #now we need to determine the infeasibility of this solution
     lowest_found_infeasibility = 0
@@ -154,7 +154,7 @@ function local_flip(sol::Solution, problem::Problem)
 end
 
 """Apply the local_flip search to a single bitlist"""
-function local_flip(bl::BitList, problem::Problem)::Solution
+function local_flip(bl::BitArray, problem::Problem)::Solution
     return local_flip(make_solution(bl, problem), problem)
 end
 
@@ -271,12 +271,12 @@ function VND(sol::Solution, problem::Problem)::Solution
 end
 
 """Apply VND to a single bitlist"""
-function VND(bl::BitList, problem::Problem)::Solution
+function VND(bl::BitArray, problem::Problem)::Solution
     return VND(make_solution(bl, problem), problem)
 end
 
 """evaluates score of bitlist"""
-function score_bitlist(bl::BitList, problem::Problem)::Int
+function score_bitlist(bl::BitArray, problem::Problem)::Int
     total_infeas = 0
     for upper_bound in problem.upper_bounds
         diff = sum(upper_bound[1] .* bl) - upper_bound[2]
@@ -298,7 +298,7 @@ function score_bitlist(bl::BitList, problem::Problem)::Int
     end
 end
 
-"""converts a BitList into a Solution"""
-function make_solution(bl::BitList, problem::Problem)
+"""converts a BitArray into a Solution"""
+function make_solution(bl::BitArray, problem::Problem)
     return Solution(bl, score_bitlist(bl, problem))
 end

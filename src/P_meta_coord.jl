@@ -52,7 +52,7 @@ function P_meta_coord(
             end
 
             #apply the perturb to generate a new bitlist
-            new_bitlist::BitList = perturb(sol, top_sol=top_sol, bottom_sol=bottom_sol, random_sols=random_sols, mean_of_sols=mean_of_sols)
+            new_bitlist::BitArray = perturb(sol, top_sol=top_sol, bottom_sol=bottom_sol, random_sols=random_sols, mean_of_sols=mean_of_sols)
 
             #apply the local search
             new_sol::Solution = ls(new_bitlist, problem)

@@ -1,4 +1,4 @@
-"""get inclusive (min, max) tuple of the range sum(BitList) may return"""
+"""get inclusive (min, max) tuple of the range sum(BitArray) may return"""
 function get_solution_range(p::Problem)
     problem = deepcopy(p) #list comprehension introduces side effects
     max_value = min([get_max_on(bound[1], bound[2]) for bound in problem.upper_bounds]...)
