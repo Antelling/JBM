@@ -3,8 +3,10 @@ function column_average_chances(
         random_sols::Population,
         top_sol::Solution,
         bottom_sol::Solution,
-        mean_of_sols::Vector{Float64}=0)::BitList
+        mean_of_sols::Vector{Float64}=0,
+        n_samples=1)::BitList
 
+    print("$n_samples")
     n_dimensions = length(first_sol.bitlist)
     averages::Vector{Float64} = zeros(n_dimensions)
     for sol in random_sols

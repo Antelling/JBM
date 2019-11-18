@@ -84,3 +84,21 @@ function P_meta_coord(
         end
     end
 end
+
+
+"""P-meta-coord-closure:
+Accepts a perturb function and dict of keyword arguments to be applied to the
+perturb function when it is called. Returns a function compliant with the
+perturb function signature with keyword arguments set.
+"""
+function PMCPC(perturb::Function, args::Dict{Symbol,Int})
+    return function PMCPC_internal(
+            first_sol::Solution;
+            random_sols::Population,
+            top_sol::Solution,
+            bottom_sol::Solution,
+            mean_of_sols::Vector{Float64}=0)
+        println(args)
+        return perturb(first_sol,random_sols,top_sol,bottom_sol,mean_of_sols, args...)
+    end
+end

@@ -1,5 +1,5 @@
 """determines if the bitlist violates any constraints"""
-function is_valid(solution::BitList, problem::Problem)::Bool
+function is_valid(solution::BitArray, problem::Problem)::Bool
     for upper_bound in problem.upper_bounds
         if sum(upper_bound[1] .* solution) > upper_bound[2]
             return false
@@ -7,6 +7,24 @@ function is_valid(solution::BitList, problem::Problem)::Bool
     end
     for lower_bound in problem.lower_bounds
         if sum(lower_bound[1] .* solution) < lower_bound[2]
+            return false
+        end
+    end
+    return true
+end
+
+function satisfies_demands(solution::BitArray, problem::Problem)::Bool
+    for lower_bound in problem.lower_bounds
+        if sum(lower_bound[1] .* solution) < lower_bound[2]
+            return false
+        end
+    end
+    return true
+end
+
+function satisfies_dimensions(solution::BitArray, problem::Problem)::Bool
+    for upper_bound in problem.upper_bounds
+        if sum(upper_bound[1] .* solution) > upper_bound[2]
             return false
         end
     end
