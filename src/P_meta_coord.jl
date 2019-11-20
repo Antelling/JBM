@@ -86,7 +86,7 @@ function P_meta_coord(
 end
 
 
-"""P-meta-coord-closure:
+"""P-meta-coord-perturb-closure:
 Accepts a perturb function and dict of keyword arguments to be applied to the
 perturb function when it is called. Returns a function compliant with the
 perturb function signature with keyword arguments set.
@@ -98,7 +98,40 @@ function PMCPC(perturb::Function, args::Dict{Symbol,Int})
             top_sol::Solution,
             bottom_sol::Solution,
             mean_of_sols::Vector{Float64}=0)
-        println(args)
-        return perturb(first_sol,random_sols,top_sol,bottom_sol,mean_of_sols, args...)
+        return perturb(first_sol;
+            random_sols=random_sols,
+            top_sol=top_sol,
+            bottom_sol=bottom_sol,
+            mean_of_sols=mean_of_sols,
+            args...)
+    end
+end
+
+
+"""P-meta-coord-closure"""
+function PMCC(;
+    ls::Function,
+    perturb::Function,
+    use_top::Bool=false,
+    use_bottom::Bool=false,
+    use_mean::Bool=false,
+    use_random::Bool=false,
+    top_n::Int=1,
+    bottom_n::Int=1,
+    random_n::Int=1,
+    time_limit::Number=10)
+
+    return function PMCC_internal(pop::Population, problem::Problem)
+        return P_meta_coord(pop, problem,
+                ls,
+                perturb,
+                use_top=use_top,
+                use_bottom=use_bottom,
+                use_mean=use_mean,
+                use_random=use_random,
+                top_n=top_n,
+                bottom_n=bottom_n,
+                random_n=random_n,
+                time_limit=time_limit)
     end
 end

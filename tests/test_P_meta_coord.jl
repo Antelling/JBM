@@ -24,8 +24,8 @@ end
 
 function test_perturb_closure()
 	problems = parse_file("../benchmark_problems/mdmkp_ct3.txt")
-	GA_3samp = PMCPC(column_average_chances, Dict{Symbol,Int}(:n_samples => 3))
-	GA_1samp = PMCPC(column_average_chances, Dict{Symbol,Int}())
+	GA_3samp = PMCPC(column_average_chances, Dict{Symbol,Int}(:n_samples => 20))
+	GA_1samp = PMCPC(column_average_chances, Dict{Symbol,Int}(:n_samples => 1))
 
 	for p in 1:20
 		problem = problems[p]
@@ -33,10 +33,10 @@ function test_perturb_closure()
 		first_sum = sum(get_population_scores(pop))
 
 		GA_3samp_results = deepcopy(pop)
-		P_meta_coord(GA_3samp_results, problem, VND, GA_3samp, use_random=true, random_n=1, time_limit=.1)
+		P_meta_coord(GA_3samp_results, problem, local_swap, GA_3samp, use_random=true, random_n=1, time_limit=.1)
 
 		GA_1samp_results = deepcopy(pop)
-		# P_meta_coord(GA_1samp_results, problem, local_swap, GA_1samp, use_random=true, random_n=1, time_limit=.1)
+		P_meta_coord(GA_1samp_results, problem, local_swap, GA_1samp, use_random=true, random_n=1, time_limit=.1)
 
 		GA_results = deepcopy(pop)
 		# P_meta_coord(GA_results, problem, local_swap, column_average_chances, use_random=true, random_n=1, time_limit=.1)
