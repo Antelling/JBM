@@ -25,6 +25,49 @@ function local_swap(bl::BitArray, problem::Problem)::Solution
     return local_swap(make_solution(bl, problem), problem)
 end
 
+"""Apply the local_double_swap search to every solution in a population"""
+function local_double_swap(pop::Population, problem::Problem)::Population
+    for i in 1:length(pop)
+        new_sol = local_double_swap(pop[i], problem)
+        if !contains(pop, new_sol)
+            pop[i] = new_sol
+        end
+    end
+    return pop
+end
+
+"""Apply the local_double_swap search to a single solution"""
+function local_double_swap(sol::Solution, problem::Problem; only_one_trial::Bool=false)::Solution
+    while true
+        testing_sol = deepcopy(sol)
+        for (i, first_bit_val) in enumerate(testing_sol.bitlist) #loop over every bit in the bitlist
+            if first_bit_val #if the bit is on
+                testing_sol.bitlist[i] = false
+                for (j, second_bit_val) in enumerate(testing_sol.bitlist) #start a second loop over every bit
+                    if !second_bit_val #if the second bit is off
+                        testing_sol.bitlist[j] = true
+                        best_single_swap = _individual_swap(testing_sol, problem)
+                        if best_single_swap.score > sol.score
+                            sol = best_single_swap
+                        end
+                        testing_sol.bitlist[j] = false
+                    end
+                end
+                testing_sol.bitlist[i] = true
+            end
+        end
+        if sol.bitlist == testing_sol.bitlist || only_one_trial
+            break
+        end
+    end
+    return sol
+end
+
+"""Apply the local_double_swap search to a single bitlist"""
+function local_double_swap(bl::BitArray, problem::Problem)::Solution
+    return local_double_swap(make_solution(bl, problem), problem)
+end
+
 """Return the best solution in the swap neighborhood"""
 function _individual_swap(solution::Solution, problem::Problem; only_repair::Bool=false)::Solution
     bl = solution.bitlist
@@ -50,10 +93,10 @@ function _individual_swap(solution::Solution, problem::Problem; only_repair::Boo
         end
     end
 
-    for i in 1:length(bl) #loop over every bit in the bitlist
-        if bl[i] #if the bitlist is on
-            for j in 1:length(bl) #start a second loop over every bit
-                if !bl[j] #if the second bit is off
+    for (i, first_bit_val) in enumerate(bl) #loop over every bit in the bitlist
+        if first_bit_val #if the bitlist is on
+            for (j, second_bit_val) in enumerate(bl) #start a second loop over every bit
+                if !second_bit_val #if the second bit is off
 
                     #first update objective function value:
                     new_objective_value = objective_value - problem.objective[i] + problem.objective[j]
@@ -133,6 +176,7 @@ end
 
 """Apply local flip search to whole population"""
 function local_flip(pop::Population, problem::Problem)
+    println("local flip for pop called")
     for i in 1:length(pop)
         new_sol = local_flip(pop[i], problem)
         if !contains(pop, new_sol)
@@ -144,6 +188,7 @@ end
 
 """Apply local flip search to single solution"""
 function local_flip(sol::Solution, problem::Problem)
+    println("local flip for sol called")
     prev_sol = sol
     new_sol = _individual_flip(sol, problem)
     while prev_sol.bitlist != new_sol.bitlist
@@ -182,6 +227,8 @@ function _individual_flip(sol::Solution, problem::Problem)
             lowest_found_infeasibility += diff
         end
     end
+
+    println("using $lowest_found_infeasibility, $best_found_objective as seed")
 
     for i in 1:length(bl)
         on_or_off = bl[i] ? -1 : 1
@@ -232,6 +279,7 @@ function _individual_flip(sol::Solution, problem::Problem)
             #with the better objective function
             if new_objective_value > best_found_objective
                 best_found_objective = new_objective_value
+                println("  improvement to $new_infeasibility, $best_found_objective found")
                 best_found_bitlist = deepcopy(bl)
                 best_found_bitlist[i] = !best_found_bitlist[i]
             end
@@ -240,9 +288,14 @@ function _individual_flip(sol::Solution, problem::Problem)
             best_found_bitlist = deepcopy(bl)
             best_found_bitlist[i] = !best_found_bitlist[i]
             lowest_found_infeasibility = new_infeasibility
+            println("  improvement to $new_infeasibility, $best_found_objective found")
         end
     end
     return Solution(best_found_bitlist, best_found_objective)
+end
+
+function _individual_double_swap(solution::Solution, problem::Problem)
+    return local_double_swap(solution, problem, only_one_trial=true)
 end
 
 """Apply VND search to every solution in population"""
@@ -260,12 +313,25 @@ end
 """Apply VND search to single solution"""
 function VND(sol::Solution, problem::Problem)::Solution
     prev_sol = sol
-    new_sol = _individual_flip(sol, problem)
-    new_sol = _individual_swap(new_sol, problem)
+
+    option_one = _individual_flip(sol, problem)
+    option_two = _individual_swap(sol, problem)
+    option_three = local_double_swap(sol, problem, only_one_trial=true)
+
+    println(option_one.score," ", option_two.score," ", option_three.score)
+
+    one_two_max = option_one.score < option_two.score ? option_two : option_one
+    new_sol = one_two_max.score < option_three.score ? option_three : one_two_max
+    println(new_sol.score)
+
     while prev_sol.bitlist != new_sol.bitlist
-        prev_sol = deepcopy(new_sol)
-        new_sol = _individual_flip(new_sol, problem)
-        new_sol = _individual_swap(new_sol, problem)
+        prev_sol = new_sol
+        option_one = _individual_flip(sol, problem)
+        option_two = _individual_swap(sol, problem)
+        option_three = local_double_swap(sol, problem, only_one_trial=true)
+
+        one_two_max = option_one.score < option_two.score ? option_two : option_one
+        new_sol = one_two_max.score < option_three.score ? one_two_max : option_three
     end
     return new_sol
 end

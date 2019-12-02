@@ -49,10 +49,4 @@ end
 
 # test_with_ga()
 test_perturb_closure()
-# using Profile
-# Profile.clear()
-# @profile test()
-# using ProfileView
-# ProfileView.view()
-# readline()
 println("P_meta_coord tests passed")
