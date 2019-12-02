@@ -262,12 +262,11 @@ function test()
 
         problems = parse_file("./benchmark_problems/mdmkp_ct$dataset.txt")
 
-        bad_random_start = random_init(problems[1], 10, force_valid=false)
-
         i = 1
         for problem in problems
             println(i)
             i+=1
+            bad_random_start = random_init(problem, 10, force_valid=false)
             good_random_start = random_init(problems[1], 1000, force_valid=false)
             sort!(good_random_start, by=x->x.score)
 
