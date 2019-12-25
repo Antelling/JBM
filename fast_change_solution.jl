@@ -1,5 +1,3 @@
-include("compose.jl")
-
 mutable struct CompleteSolution
     bitlist::BitArray
     _objective_value::Int64
@@ -111,6 +109,46 @@ function greedy_flip(sol::Solution, problem::Problem)
         end
     end
     return Solution(best_sol)
+end
+
+function greedy_flip2(sol::Solution, problem::Problem)
+    sol = CompleteSolution(sol.bitlist, problem)
+    improved = true
+    while improved
+        improved = greedy_flip_internal!(sol, problem)
+    end
+    Solution(sol)
+end
+
+function greedy_flip_internal!(sol::CompleteSolution, problem::Problem)::Bool
+    index_to_change = 0
+    best_found_score = sol.score
+    # println("best found score is $best_found_score")
+    feas = best_found_score > 0
+    # println("feas is $feas")
+    for i in 1:length(sol.bitlist)
+        # println("starting score is $(sol.score)")
+        if flip_bit!(sol, problem, i, feas=feas)
+            # println("resulting flip scores $(sol.score)")
+            if sol.score > best_found_score
+                # println("new high found")
+                best_found_score = sol.score
+                index_to_change = i
+            else
+                # println("feas short circuit")
+            end
+
+            flip_bit!(sol, problem, i) #flip the bit back
+        end
+        # println("ending score is $(sol.score)")
+    end
+    if index_to_change > 0
+        # println("changing an index $index_to_change")
+        flip_bit!(sol, problem, index_to_change)
+        # println("score is now $(sol.score)")
+        return true
+    end
+    return false
 end
 
 function greedy_swap(sol::Solution, problem::Problem)
@@ -250,21 +288,25 @@ function VND(sol::Solution, problem::Problem)
 
 end
 
+function control(sol::Solution, problem::Problem)
+    sol
+end
+
 function test()
     results = Vector{Dict{String,
-        Dict{String,Vector{Tuple{Int,Float64}}
-        }}}()
-    for dataset in 1:3
+                Dict{String,Vector{Tuple{Int,Float64}}
+                }}}()
+    for dataset in [1]
         push!(results, Dict{String,Dict{String,Vector{Tuple{Int,Int}}}}())
-        results[dataset]["bad_random_start"] = Dict{String,Vector{Tuple{Int,Float64}}}()
-        results[dataset]["good_random_start"] = Dict{String,Vector{Tuple{Int,Float64}}}()
-        results[dataset]["optimized_start"] = Dict{String,Vector{Tuple{Int,Float64}}}(  )
+        # results[dataset]["bad_random_start"] = Dict{String,Vector{Tuple{Int,Float64}}}()
+        # results[dataset]["good_random_start"] = Dict{String,Vector{Tuple{Int,Float64}}}()
+        # results[dataset]["optimized_start"] = Dict{String,Vector{Tuple{Int,Float64}}}()
 
-        problems = parse_file("./benchmark_problems/mdmkp_ct$dataset.txt")
+        problems = parse_file("./benchmark_problems/mdmkp_ct4.txt")
 
         i = 1
         for problem in problems
-            println(i)
+            println("yeet $i")
             i+=1
             bad_random_start = random_init(problem, 10, force_valid=false)
             good_random_start = random_init(problems[1], 1000, force_valid=false)
@@ -282,18 +324,24 @@ function test()
                     (optimized_start, "optimized start"),
                     (good_random_start, "good random start"),
                     (bad_random_start, "bad random start")]
-                results[dataset][popname] = Dict{String,Vector{Tuple{Int,Float64}}}()
+                if !(popname in keys(results[dataset]))
+                    results[dataset][popname] = Dict{String,Vector{Tuple{Int,Float64}}}()
+                end
                 for (alg, algname) in [
+                        (control, "control"),
                         (greedy_flip, "greedy flip"),
+                        (greedy_flip2, "greedy flip2"),
                         (fast_greedy_flip, "fast greedy flip"),
-                        (eager_flip, "eager flip"),
-                        (random_eager_flip, "random eager flip"),
-                        (greedy_swap, "greedy swap"),
-                        (eager_swap, "eager swap"),
-                        (random_eager_swap, "random eager swap"),
-                        (greedyflip_then_greedyswap, "greedy_flip then greedy_swap")
+                        # (eager_flip, "eager flip"),
+                        # (random_eager_flip, "random eager flip"),
+                        # (greedy_swap, "greedy swap"),
+                        # (eager_swap, "eager swap"),
+                        # (random_eager_swap, "random eager swap"),
+                        # (greedyflip_then_greedyswap, "greedy_flip then greedy_swap")
                     ]
-                    results[dataset][popname][algname] = Vector{Tuple{Int,Float64}}()
+                    if !(algname in keys(results[dataset][popname]))
+                        results[dataset][popname][algname] = Vector{Tuple{Int,Float64}}()
+                    end
                     for sol in pop
                         start_time = time()
                         score = alg(deepcopy(sol), problem).score

@@ -4,11 +4,11 @@ using Random: randperm
 permutation and add items if they don't violate any dimension constraints.
 Check if it is valid. Then, using the same permuation, loop through and remove
 items as long as it wouldn't violate any demand constraints. """
-function greedy_construct(problem::Problem, n_solutions::Int=50; ls::Function=VND,
+function greedy_construct(problem::Problem, n_solutions::Int=50; ls::Function=make_solution,
             max_time::Int=60, force_valid::Bool=true)::Population
     n_dimensions = length(problem.objective)
 
-    valid_solutions = Set{Solution}()
+    valid_solutions = Population()
     start_time = time()
     while length(valid_solutions) < n_solutions && (time() - start_time) < max_time
 
@@ -40,7 +40,8 @@ function greedy_construct(problem::Problem, n_solutions::Int=50; ls::Function=VN
         #are satisfied to the ls function. However, this code is so much shorter
         #I don't care.
         sol::Solution = ls(bl, problem)
-        if (!force_valid || sol.score > 0)
+        # sol = make_solution(sol.bitlist, problem)
+        if ((!force_valid || sol.score > 0) && !contains(valid_solutions, sol))
             push!(valid_solutions, sol)
         end
 
@@ -65,8 +66,9 @@ function greedy_construct(problem::Problem, n_solutions::Int=50; ls::Function=VN
                 demand_solution[i] = false
             end
         end
-        sol = ls(bl, problem)
-        if !force_valid || sol.score > 0 #if it is infeasible, it has a negative objective value
+        sol = ls(demand_solution, problem)
+        # sol = make_solution(sol.bitlist, problem)
+        if (!force_valid || sol.score > 0) && !contains(valid_solutions, sol)
             push!(valid_solutions, sol)
         end
     end

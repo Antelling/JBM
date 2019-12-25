@@ -8,3 +8,8 @@ includet("src/S_metaheuristics.jl") #S metaheuristics
 includet("src/P_perturbs.jl") #transformations for P metaheuristics
 includet("src/P_meta_coord.jl") #apply transformations of P-metas
 includet("src/common_metaheuristics.jl") #definitions of common metaheuristics
+
+problems = parse_file("./benchmark_problems/mdmkp_ct1.txt")
+problem = problems[1]
+pop = greedy_construct(problem, 3, ls=make_solution, max_time=10)
+sol = pop[1]
