@@ -17,7 +17,6 @@ A collection of metaheuristics capable of approximately solving large binary pro
 
 # Todo:
 
-1. adapt local flip to new score scheme
 2. adapt P-meta-coord to allow transformers to return numerous samples
 3. implement transformers for missing metas
 4. implement move-repair mutator
