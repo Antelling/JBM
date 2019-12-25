@@ -3,7 +3,7 @@ struct Solution
     score::Int64
 end
 
-Population = Vector{Solution}
+const Population = Vector{Solution}
 
 struct Problem
     objective::Vector{Int}

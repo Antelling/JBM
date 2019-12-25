@@ -1,3 +1,6 @@
+include("compose.jl")
+
+
 mutable struct CompleteSolution
     bitlist::BitArray
     _objective_value::Int64
@@ -72,46 +75,9 @@ function flip_bit(solution::CompleteSolution, problem::Problem, bit_index::Int)
     return solution
 end
 
-function fast_greedy_flip(sol::Solution, problem::Problem)
-    best_sol = CompleteSolution(sol.bitlist, problem)
-    improved = true
-    while improved
-        improved = false
-        current_sol = deepcopy(best_sol)
-        feas = current_sol.score > 0
-        for i in 1:length(current_sol.bitlist)
-            #flip bit returns true if the bit was flipped
-            if flip_bit!(current_sol, problem, i, feas=feas)
-                if current_sol.score > best_sol.score
-                    best_sol = deepcopy(current_sol)
-                    improved = true
-                end
-                flip_bit!(current_sol, problem, i) #flip the bit back
-            end
-        end
-    end
-    return Solution(best_sol)
-end
+# ========================= NEIGHBORHOOD SEARCHES ============================ #
 
 function greedy_flip(sol::Solution, problem::Problem)
-    best_sol = CompleteSolution(sol.bitlist, problem)
-    improved = true
-    while improved
-        improved = false
-        current_sol = deepcopy(best_sol)
-        for i in 1:length(current_sol.bitlist)
-            flip_bit!(current_sol, problem, i)
-            if current_sol.score > best_sol.score
-                best_sol = deepcopy(current_sol)
-                improved = true
-            end
-            flip_bit!(current_sol, problem, i) #flip the bit back
-        end
-    end
-    return Solution(best_sol)
-end
-
-function greedy_flip2(sol::Solution, problem::Problem)
     sol = CompleteSolution(sol.bitlist, problem)
     improved = true
     while improved
@@ -151,148 +117,162 @@ function greedy_flip_internal!(sol::CompleteSolution, problem::Problem)::Bool
     return false
 end
 
-function greedy_swap(sol::Solution, problem::Problem)
-    best_sol = CompleteSolution(sol.bitlist, problem)
+function eager_flip(sol::Solution, problem::Problem)
+    sol = CompleteSolution(sol.bitlist, problem)
     improved = true
     while improved
-        improved = false
-        current_sol = deepcopy(best_sol) #fixme this is unnecessary
-        for (i, bit_value) in enumerate(current_sol.bitlist)
-            if bit_value
-                flip_bit!(current_sol, problem, i)
-                for (j, second_bit_value) in enumerate(current_sol.bitlist)
-                    if !second_bit_value
-                        flip_bit!(current_sol, problem, j)
-                        if current_sol.score > best_sol.score
-                            best_sol = deepcopy(current_sol)
-                            improved = true
+        improved = eager_flip_internal!(sol, problem)
+    end
+    Solution(sol)
+end
+
+function eager_flip_internal!(sol::CompleteSolution, problem::Problem)::Bool
+    starting_score = sol.score
+    feas = starting_score > 0
+    for i in randperm(length(sol.bitlist))
+        if flip_bit!(sol, problem, i, feas=feas)
+            if sol.score > starting_score
+                return true
+            else
+                flip_bit!(sol, problem, i)
+            end
+        end
+    end
+    return false
+end
+
+function greedy_swap(sol::Solution, problem::Problem)
+    sol = CompleteSolution(sol.bitlist, problem)
+    improved = true
+    while improved
+        improved = greedy_swap_internal!(sol, problem)
+    end
+    Solution(sol)
+end
+
+function greedy_swap_internal!(sol::CompleteSolution, problem::Problem)::Bool
+    removed_index = 0
+    inserted_index = 0
+    best_found_score = sol.score
+    n_dimensions = length(sol.bitlist)
+    for i in 1:n_dimensions
+        if sol.bitlist[i]
+            flip_bit!(sol, problem, i) #no feas check because even if the first
+            # flip takes us out of feasibility, the second flip will put us
+            # back in
+            inner_feas = sol.score > 0
+            for j in 1:n_dimensions
+                if !sol.bitlist[j]
+                    if flip_bit!(sol, problem, j, feas=inner_feas)
+                        if sol.score > best_found_score
+                            best_found_score = sol.score
+                            inserted_index = i
+                            removed_index = j
                         end
-                        flip_bit!(current_sol, problem, j)
+                        flip_bit!(sol, problem, j)
                     end
                 end
-                flip_bit!(current_sol, problem, i)
             end
+            flip_bit!(sol, problem, i)
         end
     end
-    return Solution(best_sol)
-end
 
-function eager_flip(sol::Solution, problem::Problem)
-    complete_sol = CompleteSolution(sol.bitlist, problem)
-    best_found_score = complete_sol.score
-    improved = true
-    while improved
-        improved = false
-        for i in 1:length(complete_sol.bitlist)
-            flip_bit!(complete_sol, problem, i)
-            if complete_sol.score > best_found_score
-                improved = true
-                best_found_score = complete_sol.score
-                break
-            end
-            flip_bit!(complete_sol, problem, i)
-        end
+    if removed_index > 0 # will only be changed if an improvement is found
+        flip_bit!(sol, problem, removed_index)
+        flip_bit!(sol, problem, inserted_index)
+        return true
     end
-    return Solution(complete_sol)
-end
-
-function random_eager_flip(sol::Solution, problem::Problem)
-    complete_sol = CompleteSolution(sol.bitlist, problem)
-    best_found_score = complete_sol.score
-    improved = true
-    while improved
-        improved = false
-        for i in randperm(length(complete_sol.bitlist))
-            flip_bit!(complete_sol, problem, i)
-            if complete_sol.score > best_found_score
-                improved = true
-                best_found_score = complete_sol.score
-                break
-            end
-            flip_bit!(complete_sol, problem, i)
-        end
-    end
-    return Solution(complete_sol)
+    return false
 end
 
 function eager_swap(sol::Solution, problem::Problem)
-    complete_sol = CompleteSolution(sol.bitlist, problem)
-    best_found_score = complete_sol.score
+    sol = CompleteSolution(sol.bitlist, problem)
     improved = true
     while improved
-        improved = false
-        for (i, bit_value) in enumerate(complete_sol.bitlist)
-            if bit_value
-                flip_bit!(complete_sol, problem, i)
-                for (j, second_bit_value) in enumerate(complete_sol.bitlist)
-                    if !second_bit_value
-                        flip_bit!(complete_sol, problem, j)
-                        if complete_sol.score > best_found_score
-                            best_found_score = complete_sol.score
-                            improved = true
-                            break
-                        end
-                        flip_bit!(complete_sol, problem, j)
-                    end
-                end
-                if improved
-                    break
-                end
-                flip_bit!(complete_sol, problem, i)
-            end
-        end
+        improved = greedy_swap_internal!(sol, problem)
     end
-    return Solution(complete_sol)
+    Solution(sol)
 end
 
-function random_eager_swap(sol::Solution, problem::Problem)
-    complete_sol = CompleteSolution(sol.bitlist, problem)
-    best_found_score = complete_sol.score
+function eager_swap_internal!(sol::Solution, problem::Problem)
+    best_found_score = sol.score
+    n_dimensions = length(sol.bitlist)
+    for i in randperm(n_dimensions)
+        if sol.bitlist[i]
+            flip_bit!(sol, problem, i) #no feas check because even if the first
+            # flip takes us out of feasibility, the second flip will put us
+            # back in
+            inner_feas = sol.score > 0
+            for j in randperm(n_dimensions)
+                if !sol.bitlist[j]
+                    if flip_bit!(sol, problem, j, feas=inner_feas)
+                        if sol.score > best_found_score
+                            return true
+                        end
+                        flip_bit!(sol, problem, j)
+                    end
+                end
+            end
+            flip_bit!(sol, problem, i)
+        end
+    end
+
+    return false
+end
+
+"""Exhausted flip then exhausted swap"""
+function exhflip_then_exhswap(sol::Solution, problem::Problem)
+    sol = CompleteSolution(sol.bitlist, problem)
     improved = true
     while improved
-        improved = false
-        for i in randperm(length(complete_sol.bitlist))
-            if complete_sol.bitlist[i]
-                flip_bit!(complete_sol, problem, i)
-                for j in randperm(length(complete_sol.bitlist))
-                    if !complete_sol.bitlist[j]
-                        flip_bit!(complete_sol, problem, j)
-                        if complete_sol.score > best_found_score
-                            best_found_score = complete_sol.score
-                            improved = true
-                            break
-                        end
-                        flip_bit!(complete_sol, problem, j)
-                    end
-                end
-                if improved
-                    break
-                end
-                flip_bit!(complete_sol, problem, i)
-            end
-        end
+        improved = greedy_flip_internal!(sol, problem)
     end
-    return Solution(complete_sol)
+    improved = true
+    while improved
+        improved = greedy_swap_internal!(sol, problem)
+    end
+    Solution(sol)
 end
 
-function greedyflip_then_greedyswap(sol::Solution, problem::Problem)
-    sol = greedy_flip(sol, problem)
-    return greedy_swap(sol, problem)
+"""flip then swap until exhaustion"""
+function exh_flip_and_swap(sol::Solution, problem::Problem)
+    sol = CompleteSolution(sol.bitlist, problem)
+    improved = true
+    improved2 = false
+    while improved
+        improved = greedy_flip_internal!(sol, problem)
+        improved2 = greedy_swap_internal!(sol, problem)
+        improved = improved || improved2 # I don't know how to shorten this
+        # without short circuiting
+    end
+    improved = true
+    while improved
+        improved = greedy_swap_internal!(sol, problem)
+    end
+    Solution(sol)
 end
 
-function eager_VND(sol::Solution, problem::Problem)
-
+"""🦔 🦔 🦔 🦔 🦔 🦔
+flip until exhaustion, then swap and restart"""
+function i_am_speed(sol::Solution, problem::Problem)
+    sol = CompleteSolution(sol.bitlist, problem)
+    while greedy_flip_internal!(sol, problem) || greedy_swap_internal!(sol, problem)
+    end
+    Solution(sol)
 end
 
-function VND(sol::Solution, problem::Problem)
-
+LS = i_am_speed
+function LS(bl::BitArray, problem::Problem)
+    #make a dummy Solution with a score of 0, because the bitarray will be taken
+    # out to make a CompleteSolution with correct score
+    LS(Solution(bl, 0), problem)
 end
 
 function control(sol::Solution, problem::Problem)
     sol
 end
 
-function test()
+function test(; n_trials::Int=20, dataset::Int=2)
     results = Vector{Dict{String,
                 Dict{String,Vector{Tuple{Int,Float64}}
                 }}}()
@@ -302,10 +282,10 @@ function test()
         # results[dataset]["good_random_start"] = Dict{String,Vector{Tuple{Int,Float64}}}()
         # results[dataset]["optimized_start"] = Dict{String,Vector{Tuple{Int,Float64}}}()
 
-        problems = parse_file("./benchmark_problems/mdmkp_ct4.txt")
+        problems = parse_file("./benchmark_problems/mdmkp_ct$(dataset).txt")
 
         i = 1
-        for problem in problems
+        for problem in problems[1:n_trials]
             println("yeet $i")
             i+=1
             bad_random_start = random_init(problem, 10, force_valid=false)
@@ -329,15 +309,14 @@ function test()
                 end
                 for (alg, algname) in [
                         (control, "control"),
-                        (greedy_flip, "greedy flip"),
-                        (greedy_flip2, "greedy flip2"),
-                        (fast_greedy_flip, "fast greedy flip"),
-                        # (eager_flip, "eager flip"),
-                        # (random_eager_flip, "random eager flip"),
-                        # (greedy_swap, "greedy swap"),
-                        # (eager_swap, "eager swap"),
-                        # (random_eager_swap, "random eager swap"),
-                        # (greedyflip_then_greedyswap, "greedy_flip then greedy_swap")
+                        (greedy_flip, "exhgreedy flip"),
+                        (eager_flip, "exheager flip"),
+                        (greedy_swap, "exhgreedy swap"),
+                        (eager_swap, "exheager swap"),
+                        (greedy_flip, "exhgreedy flip"),
+                        (exhflip_then_exhswap, "exhgreedy flip then exhgreedy swap"),
+                        (exh_flip_and_swap, "exh greedyflip then greedyswap"),
+                        (i_am_speed, "🦔🦔🦔🦔")
                     ]
                     if !(algname in keys(results[dataset][popname]))
                         results[dataset][popname][algname] = Vector{Tuple{Int,Float64}}()
@@ -353,4 +332,12 @@ function test()
         end
     end
     return results
+end
+
+for dataset in 1:9
+    results = test(dataset=dataset, n_trials=90)
+    file = open("results/s_meta_bench/full_test_suite_ds$dataset.json", "w")
+    using JSON
+    write(file, JSON.json(results))
+    close(file)
 end
