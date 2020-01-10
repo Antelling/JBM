@@ -1,23 +1,13 @@
-function test_with_ga(;verbose::Int=0)
-	for dataset in [7]
+function test_with_ga(datasets, n_problems)
+	for dataset in datasets
 	    problems = parse_file("../benchmark_problems/mdmkp_ct$(dataset).txt")
 
-	    for p in 1:20
-			problem = problems[p]
-	        pop::Population = greedy_construct(problem, 90, ls=local_swap, force_valid=false)
+	    for problem in problems[1:n_problems]
+	        pop::Population = greedy_construct(problem, 90, ls=SLS, force_valid=false)
 			first_sum = sum(get_population_scores(pop))
-			println(get_population_scores(pop))
-			println(count_valid(pop, problem))
-
-			while(count_valid(pop, problem) < 1)
-				P_meta_coord(pop, problem, local_swap, column_average_chances, use_random=true, random_n=1, time_limit=10)
-				println(get_population_scores(pop))
-				println(p)
-			end
-
-			println("")
+			P_meta_coord(pop, problem, SLS, column_average_chances, use_random=true, random_n=1, time_limit=3)
 			second_sum = sum(get_population_scores(pop))
-			# @assert second_sum > first_sum
+			@assert second_sum > first_sum
 		end
 	end
 end
@@ -29,14 +19,14 @@ function test_perturb_closure()
 
 	for p in 1:20
 		problem = problems[p]
-		pop::Population = random_init(problem, 90, ls=local_swap, force_valid=false)
+		pop::Population = random_init(problem, 90, ls=FLS, force_valid=false)
 		first_sum = sum(get_population_scores(pop))
 
 		GA_3samp_results = deepcopy(pop)
-		P_meta_coord(GA_3samp_results, problem, local_swap, GA_3samp, use_random=true, random_n=1, time_limit=.1)
+		P_meta_coord(GA_3samp_results, problem, FLS, GA_3samp, use_random=true, random_n=1, time_limit=.1)
 
 		GA_1samp_results = deepcopy(pop)
-		P_meta_coord(GA_1samp_results, problem, local_swap, GA_1samp, use_random=true, random_n=1, time_limit=.1)
+		P_meta_coord(GA_1samp_results, problem, FLS, GA_1samp, use_random=true, random_n=1, time_limit=.1)
 
 		GA_results = deepcopy(pop)
 		# P_meta_coord(GA_results, problem, local_swap, column_average_chances, use_random=true, random_n=1, time_limit=.1)
@@ -47,6 +37,12 @@ function test_perturb_closure()
 	end
 end
 
-# test_with_ga()
+printstyled("testing P-meta-coord...\n",color=:blue)
+printstyled("   testing column-average-chances...\n",color=:blue)
+test_with_ga([1], 1)
+test_with_ga([7, 9], 20)
+printstyled("   column-average-chances test passed\n",color=:green)
+printstyled("   testing perturb closures...\n",color=:blue)
 test_perturb_closure()
-println("P_meta_coord tests passed")
+printstyled("   closure tests passed\n",color=:green)
+printstyled("P-meta-coord tests passed\n",color=:green)
