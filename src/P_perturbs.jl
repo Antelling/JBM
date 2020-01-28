@@ -90,3 +90,31 @@ function GANM_perturb(
     pivot = rand(2:n_dimensions)
     vcat(first_sol.bitlist[1:pivot-1], random_sols[1].bitlist[pivot:end])
 end
+
+function rao1_perturb(
+        first_sol::Solution;
+        random_sols::Population,
+        top_sol::Solution,
+        bottom_sol::Solution,
+        mean_of_sols::Vector{Float64})::BitArray
+    sol_score = first_sol.score
+    rand_sol_score = random_sols[1].score
+    if sol_score > rand_sol_score
+        better_solution = first_sol
+        worse_solution = random_sols[1]
+    else
+        better_solution = random_sols[1]
+        worse_solution = first_sol
+    end
+    return [bit + rand([0, 1])*(top_sol.bitlist[i]-bottom_sol.bitlist[i]) + rand([0, 1])*(better_solution.bitlist[i]-worse_solution.bitlist[i]) > 0 for (i, bit) in enumerate(first_sol.bitlist)]
+end
+
+function rao2_perturb(
+        first_sol::Solution;
+        random_sols::Population,
+        top_sol::Solution,
+        bottom_sol::Solution,
+        mean_of_sols::Vector{Float64})::BitArray
+    return [bit + rand([0, 1])*(top_sol[i]-bottom_sol[1]) > 0 for (i, bit) in enumerate(first_sol)]
+end
+

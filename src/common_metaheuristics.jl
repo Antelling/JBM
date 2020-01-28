@@ -47,6 +47,28 @@ function return_common_metaheuristics(;
                      time_limit=time_limit,
                      max_fails=max_fails,
                      use_max_fails=use_max_fails)
+    
+    mapping["Rao1"] = PMCC(ls=ls,
+                    perturb=rao1_perturb,
+                    use_top=true,
+                    top_n=n,
+                    use_bottom=true,
+                    bottom_n=n,
+                    use_random=true,
+                    random_n=1,
+                    time_limit=time_limit,
+                    max_fails=max_fails,
+                    use_max_fails=use_max_fails)
+    
+    mapping["Rao2"] = PMCC(ls=ls,
+                    perturb=rao2_perturb,
+                    use_top=true,
+                    top_n=n,
+                    use_bottom=true,
+                    bottom_n=n,
+                    time_limit=time_limit,
+                    max_fails=max_fails,
+                    use_max_fails=use_max_fails)
 
     mapping["TLBO"] = cyclical_apply_closure([
                         PMCC(ls=ls,

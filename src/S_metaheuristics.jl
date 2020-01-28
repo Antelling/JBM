@@ -223,7 +223,7 @@ function eager_swap(sol::Solution, problem::Problem)
     Solution(sol)
 end
 
-function eager_swap_internal!(sol::Solution, problem::Problem)
+function eager_swap_internal!(sol::CompleteSolution, problem::Problem)
     best_found_score = sol.score
     n_dimensions = length(sol.bitlist)
     for i in randperm(n_dimensions)
@@ -285,6 +285,13 @@ function exh_flip_or_swap(sol::Solution, problem::Problem)
     Solution(sol)
 end
 
+"""flip until exhaustion, then swap and restart"""
+function exh_greedyflip_or_eagerswap(sol::CompleteSolution, problem::Problem)
+    while greedy_flip_internal!(sol, problem) || eager_swap_internal!(sol, problem)
+    end
+    Solution(sol)
+end
+
 """Slow Local Swap"""
 function SLS(bl::BitArray, problem::Problem)
     #make a dummy Solution with a score of 0, because the bitarray will be taken
@@ -292,6 +299,12 @@ function SLS(bl::BitArray, problem::Problem)
     exh_flip_and_swap(Solution(bl, 0), problem)
 end
 
+"""Medium Local Swap"""
+function MLS(bl::BitArray, problem::Problem)
+    #make a dummy Solution with a score of 0, because the bitarray will be taken
+    # out to make a CompleteSolution with correct score
+    exh_greedyflip_or_eagerswap(CompleteSolution(bl, problem), problem)
+end
 
 """Fast LocaL Swap"""
 function FLS(bl::BitArray, problem::Problem)
