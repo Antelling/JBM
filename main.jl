@@ -84,7 +84,7 @@ function main(; time_limit::Number=10, generator::Function, experiment_name::Str
     
     run(`mkdir -p results/$(experiment_name)`)
 
-    for dataset in 1:9
+    for dataset in 7:9
         problems = parse_file("./benchmark_problems/mdmkp_ct$(dataset).txt")
 
         results = Dict{String,Vector}()
