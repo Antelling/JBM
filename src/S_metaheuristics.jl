@@ -313,6 +313,12 @@ function FLS(bl::BitArray, problem::Problem)
     greedy_flip(Solution(bl, 0), problem)
 end
 
+function NLS(bl::BitArray, problem::Problem)
+    #make a dummy Solution with a score of 0, because the bitarray will be taken
+    # out to make a CompleteSolution with correct score
+    make_solution(bl, problem)
+end
+
 """Control"""
 function control(sol::Solution, problem::Problem)
     sol
