@@ -42,7 +42,7 @@ function main(; time_limit::Number=10, popsize::Int=30, generator::Function, exp
     run(`mkdir -p results/$(experiment_name)`)
     metaheuristics = generator(popsize=popsize, time_limit=time_limit)
 
-    for dataset in 1:9
+    for dataset in 7:9
         problems = parse_file("./benchmark_problems/mdmkp_ct$(dataset).txt")
 
         results = Dict{String,Vector}()
@@ -80,4 +80,4 @@ function main(; time_limit::Number=10, popsize::Int=30, generator::Function, exp
     end
 end
 
-main(generator=generate_rao1_narrow_survey, experiment_name="rao1_narrow_survey", popsize=30, time_limit=3)
+main(generator=generate_rao1_narrow_survey, experiment_name="rao1_narrow_survey", popsize=30, time_limit=10)
