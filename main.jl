@@ -13,13 +13,13 @@ function generate_rao1_wide_survey(; time_limit::Int=15)
     configurations
 end
 
-function generate_rao1_narrow_survey(; popsize::Int=30, time_limit::Int=15)
+function generate_jaya_narrow_survey(; popsize::Int=30, time_limit::Int=15)
     configurations = Vector{Tuple{String,Any}}()
     push!(configurations, tuple("control", identity))
     for (search_name, search) in [("fast local search", FLS), ("no local search", make_solution)]
         for n in [1, 5, Int(popsize/2)]
-            title = "Rao1 top$n bottom$n " * search_name
-            alg = return_common_metaheuristics(n=n, time_limit=time_limit, ls=search)["Rao1"]
+            title = "Jaya top$n bottom$n " * search_name
+            alg = return_common_metaheuristics(n=n, time_limit=time_limit, ls=search)["Jaya"]
             push!(configurations, tuple(title, alg))
         end
     end
@@ -42,7 +42,7 @@ function main(; time_limit::Number=10, popsize::Int=30, generator::Function, exp
     run(`mkdir -p results/$(experiment_name)`)
     metaheuristics = generator(popsize=popsize, time_limit=time_limit)
 
-    for dataset in 1:3
+    for dataset in 7:9
         problems = parse_file("./benchmark_problems/mdmkp_ct$(dataset).txt")
 
         results = Dict{String,Vector}()
@@ -80,4 +80,4 @@ function main(; time_limit::Number=10, popsize::Int=30, generator::Function, exp
     end
 end
 
-main(generator=generate_rao1_narrow_survey, experiment_name="rao1_narrow_survey", popsize=30, time_limit=20)
+main(generator=generate_jaya_narrow_survey, experiment_name="jaya_narrow_survey", popsize=30, time_limit=20)
