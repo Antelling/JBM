@@ -74,11 +74,17 @@ function main(; time_limit::Number=10, popsize::Int=30, generator::Function, exp
                 println("$name found highest score of $highest")
                 push!(results[name], (highest, end_time - start_time))
             end
+
+			file = open("results/$(experiment_name)/ds$(dataset)_tl$(time_limit)_laptop_genimps.json", "w")
+			write(file, JSON.json(improved_gen_results))
+			close(file)
         end
 
         file = open("results/$(experiment_name)/ds$(dataset)_tl$(time_limit)_laptop.json", "w")
-        file = open("results/$(experiment_name)/ds$(dataset)_tl$(time_limit)_laptop_genimps.json", "w")
         write(file, JSON.json(results))
+		close(file)
+        file = open("results/$(experiment_name)/ds$(dataset)_tl$(time_limit)_laptop_genimps.json", "w")
+		write(file, JSON.json(improved_gen_results))
         close(file)
     end
 end
