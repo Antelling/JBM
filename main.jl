@@ -43,13 +43,8 @@ function main(; time_limit::Number=10, popsize::Int=30, generator::Function, exp
     run(`mkdir -p results/$(experiment_name)`)
     metaheuristics = generator(popsize=popsize, time_limit=time_limit)
 
-<<<<<<< HEAD
     for dataset in 7:9
         problems = parse_file("./benchmark_problems/mdmkp_ct$(dataset).txt")
-=======
-    for dataset in [1]
-        problems = parse_file("./benchmark_problems/mdmkp_ct$(dataset).txt", dataset)
->>>>>>> 1047de7bb30f94a2a04d89b91e4cc77ac2ad2529
 
         results = Dict{String,Vector}()
 		improved_gen_results = Vector{Tuple{Problem_ID, Vector{Tuple{Int,Int}}, String}}()
@@ -87,8 +82,4 @@ function main(; time_limit::Number=10, popsize::Int=30, generator::Function, exp
     end
 end
 
-<<<<<<< HEAD
-main(generator=generate_jaya_narrow_survey, experiment_name="jaya_narrow_survey", popsize=30, time_limit=20)
-=======
-main(generator=generate_CAC_narrow_survey, experiment_name="quick_junk", popsize=30, time_limit=3)
->>>>>>> 1047de7bb30f94a2a04d89b91e4cc77ac2ad2529
+main(generator=generate_jaya_narrow_survey, experiment_name="jaya_narrow_survey", popsize=30, time_limit=10)
