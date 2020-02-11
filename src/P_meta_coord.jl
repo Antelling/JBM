@@ -33,6 +33,7 @@ function P_meta_coord(
     num_fails = 0
     prev_best_found_score = best_found_score
 	improvement_gens = Vector{Tuple{Int,Int}}()
+	push!(improvement_gens, tuple(0, best_found_score))
     while time() - start_time < time_limit &&
             curr_iters < max_iter
         curr_iters += 1
