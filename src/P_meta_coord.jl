@@ -32,10 +32,15 @@ function P_meta_coord(
     curr_iters = 0
     num_fails = 0
     prev_best_found_score = best_found_score
+	improvement_gens = Vector{Tuple{Int,Int}}()
+	push!(improvement_gens, tuple(0, best_found_score))
     while time() - start_time < time_limit &&
-            curr_iters < max_iter &&
-            num_fails < max_fails
+            curr_iters < max_iter
         curr_iters += 1
+
+		if use_max_fails && num_fails < max_fails
+			break
+		end
 
         #initialize every option to be empty
         #these might be filled with values later, depending on the use_**** booleans
@@ -108,16 +113,16 @@ function P_meta_coord(
             end
         end
 
-        if use_max_fails
-            #we need to update num_fails
-            if best_found_score == prev_best_found_score
-                num_fails += 1
-            else
-                num_fails = 0
-            end
-            prev_best_found_score = best_found_score
+        if best_found_score == prev_best_found_score
+            num_fails += 1
+        else
+            num_fails = 0
+			push!(improvement_gens, tuple(curr_iters, best_found_score))
         end
+        prev_best_found_score = best_found_score
     end
+
+	return improvement_gens
 end
 
 

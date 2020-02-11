@@ -2,7 +2,7 @@ import xlsxwriter
 import json, os
 import numpy as np
 
-results_dir = "../results/rao1_fast"
+results_dir = "../results/rao1_narrow_survey"
 optimals_path = "../benchmark_problems/new_opts.json"
 
 def switch_order(results):
@@ -13,7 +13,7 @@ def switch_order(results):
     return new_list
 
 
-workbook = xlsxwriter.Workbook('rao1_fast.xlsx')
+workbook = xlsxwriter.Workbook('rao1_narrow.xlsx')
 
 negative_format = workbook.add_format({'bg_color': 'green'})
 normal_format = workbook.add_format({})
@@ -32,7 +32,7 @@ for file in os.listdir(results_dir):
     file = open(os.path.join(results_dir, file))
     results = json.loads(file.read())
     file.close()
-    
+
     for alg in results:
         results[alg] = switch_order(results[alg])
 

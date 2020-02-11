@@ -1,6 +1,6 @@
 """Will load a collection of 90 problems from a passed filename.
 Files must be in the http://people.brunel.ac.uk/~mastjjb/jeb/orlib/mdmkpinfo.html format"""
-function parse_file(filename::String)::Vector{Problem}
+function parse_file(filename::String, dataset_num::Int)::Vector{Problem}
     f = open(filename)
 
     problems::Vector{Problem} = []
@@ -9,8 +9,10 @@ function parse_file(filename::String)::Vector{Problem}
     #file.
     amount_of_problems = next_line(f)[1]
 
+	instance_num = 0
     #so now for every problem:
     for problem in 1:amount_of_problems
+		instance_num += 1
         n, m = next_line(f)
         lower_than_values::Vector{Vector{Int}} = []
         for i in 1:m
@@ -41,6 +43,7 @@ function parse_file(filename::String)::Vector{Problem}
                 cost_coefficient_values[i],
                 upper_bounds,
                 lower_bounds[1:q[i]],
+				Problem_ID(dataset_num, instance_num, i)
             ))
         end
     end
