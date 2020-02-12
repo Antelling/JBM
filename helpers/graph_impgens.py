@@ -5,23 +5,8 @@ from matplotlib.lines import Line2D
 
 from matplotlib import pyplot as plt
 
-results_dir = "../results/labeled_junk_test"
+results_dir = "../results/Rao1_ds9_minute"
 OPTS_PATH = "../benchmark_problems/new_opts.json"
-
-def make_opt_dict_ifo():
-	optimals = json.loads(open(OPTS_PATH).read())
-	instance = 1
-	case = 1
-	ref_dict = {}
-	for ds in range(1, 10):
-		index = 0
-		for instance in range(1, 16):
-			for case in range(1, 7):
-				opt = optimals[str(ds)][index]
-				key = f"{ds} {instance} {case}"
-				optimals[key] = opt
-				index += 1
-	return optimals
 
 def make_opt_dict_cfo():
 	optimals = json.loads(open(OPTS_PATH).read())
@@ -47,15 +32,26 @@ def apply_stopping_critera(applications, percentages, n_fails):
 		current_applications = applications[i]
 		if current_applications - prev_applications <= n_fails:
 			prev_percentage = current_percentage
+			prev_applications = current_applications
 		else:
 			cutoff = True
 			break
 	return (prev_percentage, cutoff)
 
+def apply_maxapps_cutoff(applications, percentages, maxapps):
+	prev_percentage = percentages[0]
+	cutoff = False
+	for i in range(1, len(applications)):
+		if applications[i] > maxapps:
+			cutoff = True
+			break
+		prev_percentage = percentages[i]
+	return (prev_percentage, cutoff)
+
+
 opt_dict = make_opt_dict_cfo()
 
 color_list = ["red", "gold", "green", "cyan", "blue", "purple", "black", "brown"]
-# color_list = ["tab:red", "tab:pink", "tab:orange", "tab:green", "tab:blue", "tab:purple", "tab:gray"]
 next_color_to_use = 0
 color_map = {}
 
@@ -76,7 +72,9 @@ for file in os.listdir(results_dir):
 		key = test[0]
 		impgens = test[1]
 		label = test[2]
-		if len(impgens) == 0 or impgens[0][1] < 1: #< 1 means we didn't start feasible
+		if len(impgens) == 0: #skip over control
+			continue
+		if impgens[0][1] < 1: #do we have to start feasible?
 			continue
 
 		#now we need to figure out what color to use for this label
@@ -108,7 +106,7 @@ for file in os.listdir(results_dir):
 		labeled_app_percent_pairs[label].append((x, y))
 	plt.ylabel("percent of CPLEX reported optimal")
 	plt.xlabel("number of metaheuristic applications")
-	plt.title(f"Rao1 10second dataset{dataset} performance over applications")
+	plt.title(f"Rao1 1 minute dataset{dataset} performance over applications")
 
 	#pyplot does not combine duplicate labels
 	#I found this code on stack overflow to suck out the labels and combine duplicates
@@ -133,10 +131,14 @@ for file in os.listdir(results_dir):
 	#stopping criteria changes
 	for label in labeled_app_percent_pairs:
 		averages = []
-		for stopping_criteria in range(2, 2000):
+		for stopping_criteria in range(2, 700):
 			percentages = []
 			cutoff_applied = False
 			for i in range(len(labeled_app_percent_pairs[label])):
+				_, __ = apply_maxapps_cutoff(
+					labeled_app_percent_pairs[label][i][0],
+					labeled_app_percent_pairs[label][i][1],
+					stopping_criteria)
 				percentage, cutoff = apply_stopping_critera(
 					labeled_app_percent_pairs[label][i][0],
 					labeled_app_percent_pairs[label][i][1],
@@ -149,9 +151,38 @@ for file in os.listdir(results_dir):
 				#it makes any difference to our data
 				break
 		plt.plot(averages, color=color_map[label], label=label)
-	plt.title(f"stopping criteria affect on dataset {dataset} average scores found by various Rao1 metaheuristics")
+	plt.title(f"max failed attempts affect on dataset {dataset} average scores")
 	plt.xlabel("amount of failed applications used as stopping criteria")
 	plt.ylabel("average percentage of optimals acheived")
 	plt.legend()
 	plt.savefig(f"impgen_graphs/ds{dataset}_stopping_criteria_effects.png", bbox_inches='tight', dpi=700)
+	plt.clf()
+
+	print("starting final graph")
+	#now we graph of how changing the maximum applications changes the score
+	#now we want to make a graph of how the average percentage changes as the
+	#stopping criteria changes
+	for label in labeled_app_percent_pairs:
+		averages = []
+		for maxapps in range(2, 15000):
+			percentages = []
+			cutoff_applied = False
+			for i in range(len(labeled_app_percent_pairs[label])):
+				percentage, cutoff = apply_maxapps_cutoff(
+					labeled_app_percent_pairs[label][i][0],
+					labeled_app_percent_pairs[label][i][1],
+					maxapps)
+				cutoff_applied = cutoff_applied or cutoff
+				percentages.append(percentage)
+			averages.append(np.mean(percentages))
+			if not cutoff_applied:
+				#we have increased the stopping criteria to above a value that
+				#it makes any difference to our data
+				break
+		plt.plot(averages, color=color_map[label], label=label)
+	plt.title(f"max apps affect on dataset {dataset} average scores")
+	plt.xlabel("amount of applications")
+	plt.ylabel("average percentage of optimals acheived")
+	plt.legend()
+	plt.savefig(f"impgen_graphs/ds{dataset}_max_apps.png", bbox_inches='tight', dpi=700)
 	plt.clf()

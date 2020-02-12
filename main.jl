@@ -39,15 +39,15 @@ function generate_CAC_narrow_survey(; popsize::Int=30, time_limit::Int=15)
     configurations
 end
 
-function main(; time_limit::Number=10, popsize::Int=30, generator::Function, experiment_name::String)
+function main(; time_limit::Number=10, popsize::Int=30, generator::Function, experiment_name::String, datasets=1:9)
     run(`mkdir -p results/$(experiment_name)`)
     metaheuristics = generator(popsize=popsize, time_limit=time_limit)
 
-    for dataset in 7:9
-        problems = parse_file("./benchmark_problems/mdmkp_ct$(dataset).txt")
+    for dataset in datasets
+        problems = parse_file("./benchmark_problems/mdmkp_ct$(dataset).txt", dataset)
 
         results = Dict{String,Vector}()
-		improved_gen_results = Vector{Tuple{Problem_ID, Vector{Tuple{Int,Int}}, String}}()
+		improved_gen_results = Vector{Tuple{Problem_ID, Vector{Tuple{Int,Int}}, String, Float64}}()
         for (name, alg) in metaheuristics
             results[name] = Vector()
         end
@@ -66,10 +66,11 @@ function main(; time_limit::Number=10, popsize::Int=30, generator::Function, exp
                 start_time = time()
                 improvement_gens = meta(curr_pop, problem)
                 end_time = time()
-				push!(improved_gen_results, tuple(problem.id, improvement_gens, name))
+				elapsed_time = end_time - start_time
+				push!(improved_gen_results, tuple(problem.id, improvement_gens, name, elapsed_time))
                 highest = get_population_scores(curr_pop)[end]
                 println("$name found highest score of $highest")
-                push!(results[name], (highest, end_time - start_time))
+                push!(results[name], (highest, elapsed_time))
             end
         end
 
@@ -82,4 +83,9 @@ function main(; time_limit::Number=10, popsize::Int=30, generator::Function, exp
     end
 end
 
-main(generator=generate_jaya_narrow_survey, experiment_name="jaya_narrow_survey", popsize=30, time_limit=10)
+main(
+	generator=generate_rao1_narrow_survey,
+	experiment_name="Rao1_ds9_minute",
+	popsize=30,
+	time_limit=60,
+	datasets=[9])
