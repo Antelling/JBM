@@ -3,7 +3,7 @@ import json, os
 import numpy as np
 
 """Define results dir"""
-RESULTS_DIR = "../results/rao1_narrow_survey"
+RESULTS_DIR = "../results/Rao1_ds9_minute"
 
 """convert from index major order to case first order"""
 def switch_order(results):
@@ -15,7 +15,7 @@ def switch_order(results):
 
 
 """create workbook"""
-workbook = xlsxwriter.Workbook('rao1_fast_dense.xlsx', {'nan_inf_to_errors': True})
+workbook = xlsxwriter.Workbook('rao1_ds9_minute.xlsx', {'nan_inf_to_errors': True})
 
 """define xlsxwrite formats"""
 percentage_format = workbook.add_format({'num_format': '0.00%'})
@@ -40,7 +40,6 @@ def calc_percentages(observed, optimals):
 	for case_start_index in range(0, 90, 15):
 		case_observed = observed[case_start_index:(case_start_index+15)]
 		case_optimals = optimals[case_start_index:(case_start_index+15)]
-		print(len(case_observed))
 		case_percentages = []
 		case_failures = 0
 		for i in range(len(case_observed)):
@@ -54,7 +53,7 @@ def calc_percentages(observed, optimals):
 	return (percentages, failures)
 
 
-"""convert data of the form {"alg1": [x, y, z]} to ["alg1", x, y, z]"""
+"""convert data of the form {"alg1": [x, y, z]} to [["alg1", x, y, z]]"""
 def dictdata_to_listdata(data, dup_title=True):
 	new_data = []
 	for key in data:
@@ -76,6 +75,8 @@ def get_data(results_dir, combine_cases=True):
 	algorithms_percentages = {}
 	algorithms_failures = {}
 	for file in os.listdir(results_dir):
+		if "genimps" in file:
+			continue
 		dataset = file[2]
 
 		#determine the stopping criteria and make sure we have a place to
@@ -164,8 +165,8 @@ def add_means(array, dup_label=True):
 	return array + [np.mean(array)]
 
 
-all_combined_percentages, all_combined_failures = get_data("../results/rao1_narrow_survey", combine_cases=True)
-all_separate_percentages, all_separate_failures = get_data("../results/rao1_narrow_survey", combine_cases=False)
+all_combined_percentages, all_combined_failures = get_data(RESULTS_DIR, combine_cases=True)
+all_separate_percentages, all_separate_failures = get_data(RESULTS_DIR, combine_cases=False)
 for stopping_criteria in all_combined_percentages:
 	combined_percentages = all_combined_percentages[stopping_criteria]
 	combined_failures = all_combined_failures[stopping_criteria]

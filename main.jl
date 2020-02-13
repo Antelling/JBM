@@ -84,8 +84,8 @@ function main(; time_limit::Number=10, popsize::Int=30, generator::Function, exp
 end
 
 main(
-	generator=generate_rao1_narrow_survey,
+	generator=generate_jaya_narrow_survey,
 	experiment_name="Rao1_ds9_minute",
 	popsize=30,
-	time_limit=60,
-	datasets=[9])
+	time_limit=10,
+	datasets=1:3)
