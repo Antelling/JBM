@@ -43,8 +43,8 @@ function main(; time_limit::Number=10, popsize::Int=30, generator::Function, exp
     run(`mkdir -p results/$(experiment_name)`)
     metaheuristics = generator(popsize=popsize, time_limit=time_limit)
 
-    for dataset in 7:9
-        problems = parse_file("./benchmark_problems/mdmkp_ct$(dataset).txt")
+    for dataset in 1:3 
+        problems = parse_file("./benchmark_problems/mdmkp_ct$(dataset).txt", dataset)
 
         results = Dict{String,Vector}()
 		improved_gen_results = Vector{Tuple{Problem_ID, Vector{Tuple{Int,Int}}, String}}()
