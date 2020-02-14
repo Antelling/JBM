@@ -115,5 +115,5 @@ function rao2_perturb(
         top_sol::Solution,
         bottom_sol::Solution,
         mean_of_sols::Vector{Float64})::BitArray
-    return [bit + rand([0, 1])*(top_sol[i]-bottom_sol[1]) > 0 for (i, bit) in enumerate(first_sol)]
+    return [bit + rand([0, 1])*(top_sol.bitlist[i]-bottom_sol.bitlist[1]) > 0 for (i, bit) in enumerate(first_sol.bitlist)]
 end
