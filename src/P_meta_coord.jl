@@ -1,3 +1,5 @@
+using StatsBase: sample
+
 function P_meta_coord(
         population::Population,
         problem::Problem,
@@ -70,7 +72,7 @@ function P_meta_coord(
                 bottom_sol = rand(population[end-bottom_n:end])
             end
             if use_random
-                random_indices = rand(1:length(population), random_n)
+				random_indices = sample(1:length(population), random_n, replace=false)
                 random_sols = [population[i] for i in random_indices]
             end
 
