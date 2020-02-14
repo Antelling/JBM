@@ -18,7 +18,7 @@ function P_meta_coord(
     if use_top || use_bottom
         sort!(population, by=x->x.score)
         best_found_score = population[end].score
-    elseif use_max_fails
+    else
         for solution in population
             if solution.score > best_found_score
                 best_found_score = solution.score
@@ -105,7 +105,7 @@ function P_meta_coord(
         if use_top || use_bottom
             sort!(population, by=x->x.score, alg=InsertionSort) #it is nearly sorted so insertion is best
             best_found_score = population[end].score
-        elseif use_max_fails
+        else
             for solution in population
                 if solution.score > best_found_score
                     best_found_score = solution.score
