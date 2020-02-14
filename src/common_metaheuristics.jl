@@ -47,7 +47,7 @@ function return_common_metaheuristics(;
                      time_limit=time_limit,
                      max_fails=max_fails,
                      use_max_fails=use_max_fails)
-    
+
     mapping["Rao1"] = PMCC(ls=ls,
                     perturb=rao1_perturb,
                     use_top=true,
@@ -59,7 +59,7 @@ function return_common_metaheuristics(;
                     time_limit=time_limit,
                     max_fails=max_fails,
                     use_max_fails=use_max_fails)
-    
+
     mapping["Rao2"] = PMCC(ls=ls,
                     perturb=rao2_perturb,
                     use_top=true,

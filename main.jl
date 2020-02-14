@@ -1,43 +1,6 @@
 using JSON
 include("compose.jl")
-
-function generate_rao1_narrow_survey(; popsize::Int=30, time_limit::Int=15)
-    configurations = Vector{Tuple{String,Any}}()
-    push!(configurations, tuple("control", pmeta_control))
-    for (search_name, search) in [("fast local search", FLS), ("no local search", make_solution)]
-        for n in [1, 5, Int(popsize/2)]
-            title = "Rao1 top$n bottom$n " * search_name
-            alg = return_common_metaheuristics(n=n, time_limit=time_limit, ls=search)["Rao1"]
-            push!(configurations, tuple(title, alg))
-        end
-    end
-    configurations
-end
-
-function generate_jaya_narrow_survey(; popsize::Int=30, time_limit::Int=15)
-    configurations = Vector{Tuple{String,Any}}()
-    push!(configurations, tuple("control", pmeta_control))
-    for (search_name, search) in [("fast local search", FLS), ("no local search", make_solution)]
-        for n in [1, 5, Int(popsize/2)]
-            title = "Jaya top$n bottom$n " * search_name
-            alg = return_common_metaheuristics(n=n, time_limit=time_limit, ls=search)["Jaya"]
-            push!(configurations, tuple(title, alg))
-        end
-    end
-    configurations
-end
-
-function generate_CAC_narrow_survey(; popsize::Int=30, time_limit::Int=15)
-    configurations = Vector{Tuple{String,Any}}()
-    for (search_name, search) in [("fast local search", FLS), ("no local search", make_solution)]
-        for n in [1, 4, Int(popsize/2)-1]
-            title = "CAC $(n+1) parents " * search_name
-            alg = return_common_metaheuristics(n=n, time_limit=time_limit, ls=search)["CAC"]
-            push!(configurations, tuple(title, alg))
-        end
-    end
-    configurations
-end
+include("src/narrow_surveys.jl")
 
 function main(; time_limit::Number=10, popsize::Int=30, generator::Function, experiment_name::String, datasets=1:9)
     run(`mkdir -p results/$(experiment_name)`)
@@ -83,9 +46,20 @@ function main(; time_limit::Number=10, popsize::Int=30, generator::Function, exp
     end
 end
 
+name_to_func = Dict(
+	"jaya"=>generate_jaya_narrow_survey,
+	"rao1"=>generate_rao1_narrow_survey,
+	"CAC"=>generate_CAC_narrow_survey,
+	"rao2"=>generate_rao2_narrow_survey,
+	"TLBO"=>generate_TLBO_narrow_survey,
+	"TBO"=>generate_TBO_narrow_survey,
+	"LBO"=>generate_LBO_narrow_survey,
+	"GANM"=>generate_GANM_narrow_survey)
+
+
 main(
-	generator=generate_jaya_narrow_survey,
-	experiment_name="Jaya_narrow_survey_2",
-	popsize=30,
-	time_limit=220,
-	datasets=1:9)
+	generator=name_to_func[ARGS[1]],
+	experiment_name=ARGS[2],
+	popsize=parse(Int, ARGS[3]),
+	time_limit=parse(Int, ARGS[4]),
+	datasets=parse(Int, ARGS[5]):parse(Int, ARGS[6]))
