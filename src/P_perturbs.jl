@@ -1,61 +1,62 @@
 function column_average_chances(
-        first_sol::Solution;
-        random_sols::Population,
-        top_sol::Solution,
-        bottom_sol::Solution,
+        first_sol_view;
+        random_sols_views,
+        top_sol_view,
+        bottom_sol_view,
         mean_of_sols::Vector{Float64},
         n_samples::Int=1)::BitArray
 
-    n_dimensions = length(first_sol.bitlist)
+    n_dimensions = length(first_sol_view[1].bitlist)
     averages::Vector{Float64} = zeros(n_dimensions)
-    for sol in random_sols
-        averages .+= sol.bitlist
+    for sol_view in random_sols_views
+        averages .+= sol_view[1].bitlist
     end
-    averages .+= first_sol.bitlist
-    averages /= length(random_sols) + 1
+    averages .+= first_sol_view[1].bitlist
+    averages /= length(random_sols_views) + 1
     return [rand() < percent for percent in averages]
 end
 
 function jaya_perturb(
-        first_sol::Solution;
-        random_sols::Population,
-        top_sol::Solution,
-        bottom_sol::Solution,
+        first_sol_view;
+        random_sols_views,
+        top_sol_view,
+        bottom_sol_view,
         mean_of_sols::Vector{Float64},
         n_samples::Int=1)::BitArray
-        return [bit + rand([0, 1])*(top_sol.bitlist[i]-bit) - rand([0, 1])*(bottom_sol.bitlist[i]-bit) > 0 for (i, bit) in enumerate(first_sol.bitlist)]
+        return [bit + rand([0, 1])*(top_sol_view[1].bitlist[i]-bit) - rand([0, 1])*(bottom_sol_view[1].bitlist[i]-bit) > 0 for (i, bit) in enumerate(first_sol_view[1].bitlist)]
 end
 
 function TBO_perturb(
-    first_sol::Solution;
-    random_sols::Population,
-    top_sol::Solution,
-    bottom_sol::Solution,
+    first_sol_view;
+    random_sols_views,
+    top_sol_view,
+    bottom_sol_view,
     mean_of_sols::Vector{Float64},
     n_samples::Int=1)::BitArray
     return [bit +
-        rand([0,1]) * (top_sol.bitlist[i] - (rand([1, 2])) * (rand() < mean_of_sols[i])) > 0
-        for (i, bit) in enumerate(first_sol.bitlist)]
+        rand([0,1]) * (top_sol_view[1].bitlist[i] - (rand([1, 2])) * (rand() < mean_of_sols[i])) > 0
+        for (i, bit) in enumerate(first_sol_view[1].bitlist)]
 
 end
 
 function LBO_perturb(
-        first_sol::Solution;
-        random_sols::Population,
-        top_sol::Solution,
-        bottom_sol::Solution,
+        first_sol_view;
+        random_sols_views,
+        top_sol_view,
+        bottom_sol_view,
         mean_of_sols::Vector{Float64},
         n_samples::Int=1)::BitArray
 
-    second_sol = random_sols[1]
-    if second_sol.score > first_sol.score #assure first_sol is the teacher
-        temp = first_sol
-        first_sol = second_sol
+    second_sol_view = random_sols_views[1]
+    if second_sol_view[1].score > first_sol_view[1].score #assure first_sol is the teacher
+        temp = first_sol_view
+        first_sol_view = second_sol_view
         second_sol = temp
     end
-    return [second_sol.bitlist[j] + rand([0,1]) * (first_sol.bitlist[j] - second_sol.bitlist[j]) for j in 1:length(first_sol.bitlist)]
+    return [second_sol_view[1].bitlist[j] + rand([0,1]) * (first_sol_view[1].bitlist[j] - second_sol_view[1].bitlist[j]) for j in 1:length(first_sol_view[1].bitlist)]
 end
 
+"""needs to be updated to use views"""
 function GA_perturb(
         first_sol::Solution;
         random_sols::Population,
@@ -80,40 +81,40 @@ end
 
 """Genetic Algorithm No Mutation"""
 function GANM_perturb(
-        first_sol::Solution;
-        random_sols::Population,
-        top_sol::Solution,
-        bottom_sol::Solution,
+        first_sol_view;
+        random_sols_views,
+        top_sol_view,
+        bottom_sol_view,
         mean_of_sols::Vector{Float64})::BitArray
 
-    n_dimensions = length(first_sol.bitlist)
+    n_dimensions = length(first_sol_view[1].bitlist)
     pivot = rand(2:n_dimensions)
-    vcat(first_sol.bitlist[1:pivot-1], random_sols[1].bitlist[pivot:end])
+    vcat(first_sol_view[1].bitlist[1:pivot-1], random_sols_views[1][1].bitlist[pivot:end])
 end
 
 function rao1_perturb(
-        first_sol::Solution;
-        random_sols::Population,
-        top_sol::Solution,
-        bottom_sol::Solution,
+        first_sol_view;
+        top_sol_view,
+        bottom_sol_view,
+		random_sols_views,
         mean_of_sols::Vector{Float64})::BitArray
-    sol_score = first_sol.score
-    rand_sol_score = random_sols[1].score
-    if sol_score > rand_sol_score
-        better_solution = first_sol
-        worse_solution = random_sols[1]
-    else
-        better_solution = random_sols[1]
-        worse_solution = first_sol
-    end
-    return [bit + rand([0, 1])*(top_sol.bitlist[i]-bottom_sol.bitlist[i]) + rand([0, 1])*(better_solution.bitlist[i]-worse_solution.bitlist[i]) > 0 for (i, bit) in enumerate(first_sol.bitlist)]
+    return [bit + rand([0, 1])*(top_sol_view[1].bitlist[i]-bottom_sol_view[1].bitlist[1]) > 0 for (i, bit) in enumerate(first_sol_view[1].bitlist)]
 end
 
 function rao2_perturb(
-        first_sol::Solution;
-        random_sols::Population,
-        top_sol::Solution,
-        bottom_sol::Solution,
+        first_sol_view;
+        random_sols_views,
+        top_sol_view,
+        bottom_sol_view,
         mean_of_sols::Vector{Float64})::BitArray
-    return [bit + rand([0, 1])*(top_sol.bitlist[i]-bottom_sol.bitlist[1]) > 0 for (i, bit) in enumerate(first_sol.bitlist)]
+    sol_score = first_sol_view[1].score
+    rand_sol_score = random_sols_views[1][1].score
+    if sol_score > rand_sol_score
+        better_solution_view = first_sol_view
+        worse_solution_view = random_sols_views[1]
+    else
+        better_solution_view = random_sols_views[1]
+        worse_solution_view = first_sol_view
+    end
+    return [bit + rand([0, 1])*(top_sol_view[1].bitlist[i]-bottom_sol_view[1].bitlist[i]) + rand([0, 1])*(better_solution_view[1].bitlist[i]-worse_solution_view[1].bitlist[i]) > 0 for (i, bit) in enumerate(first_sol_view[1].bitlist)]
 end
