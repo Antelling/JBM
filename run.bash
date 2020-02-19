@@ -20,6 +20,7 @@
 #thats more than five and a half days
 #but we have three cores
 
-julia main.jl rao1 rao1_results 30 60 1 3 &
-julia main.jl rao1 rao1_results 30 60 4 6 &
-julia main.jl rao1 rao1_results 30 60 7 9 &
+julia main.jl rao2 rao2_results 30 60 1 3 &
+julia main.jl rao2 rao2_results 30 60 4 6 &
+julia main.jl rao2 rao2_results 30 60 7 9 &
+
