@@ -1,6 +1,3 @@
-#this script will generate a complete set of narrow survey results
-#it takes 3*(15 + 15 + 2 + 2) = 102 hours = 4.25 days to run
-
 #julia isn't actually in my path
 #alias julia="/home/anthony/software/julia-1.3.0/bin/julia --color=yes"
 
@@ -20,7 +17,13 @@
 #thats more than five and a half days
 #but we have three cores
 
-julia main.jl rao2 rao2_results 30 60 1 3 &
-julia main.jl rao2 rao2_results 30 60 4 6 &
-julia main.jl rao2 rao2_results 30 60 7 9 &
+julia main.jl rao2 rao2_p60 60 60 1 3 &
+julia main.jl rao2 rao2_p60 60 60 4 6 &
+julia main.jl rao2 rao2_p60 60 60 7 9 &
 
+#22.5 * 6 / 3 = 1 day * 2
+sleep 2d
+
+julia main.jl rao1 rao1_p60 60 60 1 3 &
+julia main.jl rao1 rao1_p60 60 60 4 6 &
+julia main.jl rao1 Rao1_p60 60 60 7 9 &

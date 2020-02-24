@@ -5,7 +5,7 @@ function dense_rep(bitarray)
 	[bit ? 1 : 0 for bit in bitarray]
 end
 
-popsize = 30
+popsize = 60
 for dataset in 1:9
     problems = parse_file("./benchmark_problems/mdmkp_ct$(dataset).txt", dataset)
 	pops = Vector{Tuple{Problem_ID, Vector{Tuple{Int, Vector{Int}}}}}()
