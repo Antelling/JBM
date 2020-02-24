@@ -5,7 +5,7 @@ from matplotlib.lines import Line2D
 
 from matplotlib import pyplot as plt
 
-results_dir = "../results/Rao1_ds9_minute"
+results_dir = "../results/rao2_results"
 OPTS_PATH = "../benchmark_problems/new_opts.json"
 
 def make_opt_dict_cfo():
@@ -51,7 +51,7 @@ def apply_maxapps_cutoff(applications, percentages, maxapps):
 
 opt_dict = make_opt_dict_cfo()
 
-color_list = ["red", "gold", "green", "cyan", "blue", "purple", "black", "brown"]
+color_list = ["red", "gold", "green", "cyan", "blue", "purple", "black", "brown", "tab:blue", "tab:orange", "tab:green"]
 next_color_to_use = 0
 color_map = {}
 
