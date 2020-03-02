@@ -3,7 +3,7 @@ import json, os
 import numpy as np
 
 """Define results dir"""
-RESULTS_DIR = "../results/rao2_results"
+RESULTS_DIR = "../results/Rao1_p30"
 
 """convert from index major order to case first order"""
 def switch_order(results):
@@ -15,7 +15,7 @@ def switch_order(results):
 
 
 """create workbook"""
-workbook = xlsxwriter.Workbook('rao2_new_60s.xlsx', {'nan_inf_to_errors': True})
+workbook = xlsxwriter.Workbook('rao1_p30.xlsx', {'nan_inf_to_errors': True})
 
 """define xlsxwrite formats"""
 percentage_format = workbook.add_format({'num_format': '0.00%'})

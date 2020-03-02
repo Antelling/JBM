@@ -19,6 +19,6 @@
 
 
 
-julia main.jl rao1 rao1_p60 60 60 1 3 &
-julia main.jl rao1 rao1_p60 60 60 4 6 &
-julia main.jl rao1 Rao1_p60 60 60 7 9 &
+julia main.jl rao1 rao1_p60_t120 60 120 1 3 &
+julia main.jl rao1 rao1_p60_t120 60 120 4 6 &
+julia main.jl rao1 Rao1_p60_t120 60 120 7 9 &

@@ -5,7 +5,7 @@ from matplotlib.lines import Line2D
 
 from matplotlib import pyplot as plt
 
-results_dir = "../results/rao2_results"
+results_dir = "../results/rao2_p60"
 OPTS_PATH = "../benchmark_problems/new_opts.json"
 
 def make_opt_dict_cfo():
