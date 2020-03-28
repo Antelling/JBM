@@ -4,7 +4,7 @@ function return_common_metaheuristics(;
         ls::Function=make_solution,
         max_fails::Int=5,
         use_max_fails::Bool=false,
-		update_extreme_solutions_during_iter::Bool=true)
+		update_extreme_solutions_every_time::Bool=true)
     mapping = Dict{String,Function}()
     mapping["CAC"] = PMCC(ls=ls,
                      perturb=column_average_chances,
@@ -60,7 +60,7 @@ function return_common_metaheuristics(;
                     time_limit=time_limit,
                     max_fails=max_fails,
                     use_max_fails=use_max_fails,
-					update_extreme_solutions_during_iter=update_extreme_solutions_during_iter)
+					update_extreme_solutions_every_time=update_extreme_solutions_every_time)
 
     mapping["Rao1"] = PMCC(ls=ls,
                     perturb=rao1_perturb,
@@ -71,7 +71,7 @@ function return_common_metaheuristics(;
                     time_limit=time_limit,
                     max_fails=max_fails,
                     use_max_fails=use_max_fails,
-					update_extreme_solutions_during_iter=update_extreme_solutions_during_iter)
+					update_extreme_solutions_every_time=update_extreme_solutions_every_time)
 
     mapping["TLBO"] = cyclical_apply_closure([
                         PMCC(ls=ls,

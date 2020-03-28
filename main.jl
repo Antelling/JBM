@@ -1,6 +1,5 @@
 using JSON
 include("compose.jl")
-include("src/narrow_surveys.jl")
 
 #TODO: cache initial pops
 #TODO: change from top 5 to top 1/6
@@ -25,7 +24,7 @@ function main(; time_limit::Number=10, popsize::Int=30, generator::Function, exp
     run(`mkdir -p results/$(experiment_name)`)
     metaheuristics = generator(popsize=popsize, time_limit=time_limit)
 
-    for dataset in datasets 
+    for dataset in datasets
         problems = parse_file("./benchmark_problems/mdmkp_ct$(dataset).txt", dataset)
 		initial_pops = load_initial_pop("initial_pops/ds$(dataset)_ps$popsize.json")
 

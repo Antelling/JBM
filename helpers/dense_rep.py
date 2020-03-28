@@ -15,7 +15,7 @@ def switch_order(results):
 
 
 """create workbook"""
-workbook = xlsxwriter.Workbook('rao1_p30.xlsx', {'nan_inf_to_errors': True})
+workbook = xlsxwriter.Workbook('testing.xlsx', {'nan_inf_to_errors': True})
 
 """define xlsxwrite formats"""
 percentage_format = workbook.add_format({'num_format': '0.00%'})
@@ -74,6 +74,7 @@ from the list of percentages"""
 def get_data(results_dir, combine_cases=True):
 	algorithms_percentages = {}
 	algorithms_failures = {}
+	included_means = {}
 	for file in os.listdir(results_dir):
 		if "genimps" in file:
 			continue
@@ -85,6 +86,7 @@ def get_data(results_dir, combine_cases=True):
 		if not stopping_criteria in algorithms_percentages:
 			algorithms_percentages[stopping_criteria] = {}
 			algorithms_failures[stopping_criteria] = {}
+			included_means[stopping_criteria] = {}
 
 		#load the data from the passed file
 		file = open(os.path.join(results_dir, file))
@@ -95,9 +97,12 @@ def get_data(results_dir, combine_cases=True):
 			if not alg in algorithms_percentages[stopping_criteria]:
 				algorithms_percentages[stopping_criteria][alg] = []
 				algorithms_failures[stopping_criteria][alg] = []
+				included_means[stopping_criteria][alg] = []
 
 			results[alg] = switch_order(results[alg])
 			case_percentages, case_failures = calc_percentages(results[alg], OPTIMALS[dataset])
+			included_means[stopping_criteria][alg] += case_percentages[0] #it comes wrapped in
+			#a singleton array (???)
 
 			#we now have two arrays of six items each, each representing a case
 			#if we want to combine the cases, we will reformat the data into arrays
@@ -119,7 +124,7 @@ def get_data(results_dir, combine_cases=True):
 
 	#algorithms_percentages and algorithms_failures are both currently dicts
 	#but for our easy table generation we want a list of lists
-	return (algorithms_percentages, algorithms_failures)
+	return (algorithms_percentages, algorithms_failures, included_means)
 
 
 """create a table on the passed sheet starting at the passed location with the
@@ -161,43 +166,48 @@ def generate_separate_case_headers(format):
 def add_totals(array, dup_label=True):
 	return array + [sum(array)]
 
-def add_means(array, dup_label=True):
-	return array + [np.mean(array)]
+def add_means(array, passed_means, dup_label=True):
+	return array + [np.mean(passed_means)]
 
+def make_directory_results(dir_prefix, dir):
+	all_combined_percentages, all_combined_failures, all_combined_means = get_data(dir_prefix + dir, combine_cases=True)
+	all_separate_percentages, all_separate_failures, all_separate_means = get_data(dir_prefix + dir, combine_cases=False)
+	for stopping_criteria in all_combined_percentages:
+		combined_percentages = all_combined_percentages[stopping_criteria]
+		combined_failures = all_combined_failures[stopping_criteria]
+		separate_percentages = all_separate_percentages[stopping_criteria]
+		separate_failures = all_separate_failures[stopping_criteria]
 
-all_combined_percentages, all_combined_failures = get_data(RESULTS_DIR, combine_cases=True)
-all_separate_percentages, all_separate_failures = get_data(RESULTS_DIR, combine_cases=False)
-for stopping_criteria in all_combined_percentages:
-	combined_percentages = all_combined_percentages[stopping_criteria]
-	combined_failures = all_combined_failures[stopping_criteria]
-	separate_percentages = all_separate_percentages[stopping_criteria]
-	separate_failures = all_separate_failures[stopping_criteria]
+		for alg in combined_percentages:
+			combined_percentages[alg] = add_means(combined_percentages[alg], all_combined_means[stopping_criteria][alg])
+			separate_percentages[alg] = add_means(separate_percentages[alg], all_separate_means[stopping_criteria][alg])
+		for alg in combined_failures:
+			combined_failures[alg] = add_totals(combined_failures[alg])
+			separate_failures[alg] = add_totals(separate_failures[alg])
 
-	for alg in combined_percentages:
-		combined_percentages[alg] = add_means(combined_percentages[alg])
-		separate_percentages[alg] = add_means(separate_percentages[alg])
-	for alg in combined_failures:
-		combined_failures[alg] = add_totals(combined_failures[alg])
-		separate_failures[alg] = add_totals(separate_failures[alg])
+		sheet = workbook.add_worksheet(dir + "__" + stopping_criteria)
 
-	sheet = workbook.add_worksheet(stopping_criteria)
+		start_row = 0
+		percentage_headers = generate_combined_case_headers(percentage_format) + [{'header': 'Mean', 'format': percentage_format}, {'header': 'Algorithm '}]
+		filled_width, filled_height = create_table(sheet, "Combined Cases Percentage Averages", percentage_headers, combined_percentages, start_row, 0)
+		start_row += filled_height + 3
 
-	start_row = 0
-	percentage_headers = generate_combined_case_headers(percentage_format) + [{'header': 'Mean', 'format': percentage_format}, {'header': 'Algorithm '}]
-	filled_width, filled_height = create_table(sheet, "Combined Cases Percentage Averages", percentage_headers, combined_percentages, start_row, 0)
-	start_row += filled_height + 3
+		failure_headers = generate_combined_case_headers(default_format) + [{'header': 'Total'}, {'header': 'Algorithm '}]
+		filled_width, filled_height = create_table(sheet, "Combined Cases Skipped Percentage Totals", failure_headers, combined_failures, start_row, 0)
+		start_row += filled_height + 3
 
-	failure_headers = generate_combined_case_headers(default_format) + [{'header': 'Total'}, {'header': 'Algorithm '}]
-	filled_width, filled_height = create_table(sheet, "Combined Cases Skipped Percentage Totals", failure_headers, combined_failures, start_row, 0)
-	start_row += filled_height + 3
+		percentage_headers = generate_separate_case_headers(percentage_format) + [{'header': 'Mean', 'format': percentage_format}, {'header': 'Algorithm '}]
+		filled_width, filled_height = create_table(sheet, "Separate Cases Percentage Averages", percentage_headers, separate_percentages, start_row, 0)
+		start_row += filled_height + 3
 
-	percentage_headers = generate_separate_case_headers(percentage_format) + [{'header': 'Mean', 'format': percentage_format}, {'header': 'Algorithm '}]
-	filled_width, filled_height = create_table(sheet, "Separate Cases Percentage Averages", percentage_headers, separate_percentages, start_row, 0)
-	start_row += filled_height + 3
+		failure_headers = generate_separate_case_headers(default_format) + [{'header': 'Total'}, {'header': 'Algorithm '}]
+		filled_width, filled_height = create_table(sheet, "Separate Cases Skipped Percentage Totals", failure_headers, separate_failures, start_row, 0)
 
-	failure_headers = generate_separate_case_headers(default_format) + [{'header': 'Total'}, {'header': 'Algorithm '}]
-	filled_width, filled_height = create_table(sheet, "Separate Cases Skipped Percentage Totals", failure_headers, separate_failures, start_row, 0)
+		sheet.set_column(1, 6*22, 10) #widen every column
 
-	sheet.set_column(1, 6*9, 10) #widen every column
+make_directory_results("../results/", "Rao1_p30")
+make_directory_results("../results/", "Rao2_p30")
+make_directory_results("../results/", "Rao1_p60")
+make_directory_results("../results/", "Rao2_p60")
 
 workbook.close()

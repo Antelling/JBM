@@ -8,7 +8,7 @@ function P_meta_coord(
         perturb::Function;
         use_top::Bool=false, use_bottom::Bool=false, use_mean::Bool=false, use_random::Bool=false,
         top_n::Int=1, bottom_n::Int=1, random_n::Int=1,
-		update_extreme_solutions_during_iter::Bool=false,
+		update_extreme_solutions_every_time::Bool=false,
         time_limit::Number=10,
         max_iter::Int=99999999,
         use_max_fails::Bool=false,
@@ -68,7 +68,7 @@ function P_meta_coord(
 
 		#the top and bottom solutions can be selected either per iteration,
 		#or per perturbations
-		if !update_extreme_solutions_during_iter
+		if !update_extreme_solutions_every_time
 			if use_top
 				top_sol_view = view(population, rand(1:top_n))
 			end
@@ -82,7 +82,7 @@ function P_meta_coord(
 			# deep copies
 
 			#potentially select top and bottom solution views
-			if update_extreme_solutions_during_iter
+			if update_extreme_solutions_every_time
 				if use_top
 					top_sol_view = view(population, rand(1:top_n))
 				end
@@ -184,7 +184,7 @@ function PMCC(;
     max_iter::Int=999999,
     use_max_fails::Bool=false,
     max_fails::Int=5,
-	update_extreme_solutions_during_iter=true)
+	update_extreme_solutions_every_time::Bool=false)
 
     return function PMCC_internal(pop::Population, problem::Problem)
         return P_meta_coord(pop, problem, ls, perturb,
@@ -199,6 +199,6 @@ function PMCC(;
                 max_iter=max_iter,
                 use_max_fails=use_max_fails,
                 max_fails=max_fails,
-				update_extreme_solutions_during_iter=update_extreme_solutions_during_iter)
+				update_extreme_solutions_every_time=update_extreme_solutions_every_time)
     end
 end

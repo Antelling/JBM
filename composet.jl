@@ -14,3 +14,4 @@ includet("src/hybrid_applicators.jl") # combine numerous P-meta
 
 includet("src/P_perturbs.jl") #transformations for P metaheuristics
 includet("src/common_metaheuristics.jl") # definitions of common metaheuristics
+includet("src/narrow_surveys.jl") # generate families of metaheuristics
