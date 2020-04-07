@@ -22,3 +22,12 @@
 julia main.jl rao1 rao1_p60_t120 60 120 1 3 &
 julia main.jl rao1 rao1_p60_t120 60 120 4 6 &
 julia main.jl rao1 Rao1_p60_t120 60 120 7 9 &
+julia main.jl rao1 rao1_p30_t120 30 120 1 3 &
+julia main.jl rao1 rao1_p30_t120 30 120 4 6 &
+julia main.jl rao1 Rao1_p30_t120 30 120 7 9 &
+julia main.jl rao2 rao2_p60_t120 60 120 1 3 &
+julia main.jl rao2 rao2_p60_t120 60 120 4 6 &
+julia main.jl rao2 Rao2_p60_t120 60 120 7 9 &
+julia main.jl rao2 rao2_p30_t120 30 120 1 3 &
+julia main.jl rao2 rao2_p30_t120 30 120 4 6 &
+julia main.jl rao2 rao2_p30_t120 30 120 7 9 &
