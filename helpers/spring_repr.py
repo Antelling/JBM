@@ -5,7 +5,7 @@ from collections import OrderedDict
 from matplotlib import pyplot as plt
 from datetime import datetime
 
-results_dir = "../results/Rao2"
+results_dirs = ["../results/Rao2", "../results/Rao1", "../results/CAC"]
 
 
 def add_formats(workbook):
@@ -39,16 +39,10 @@ def dictdata_to_listdata(data, dup_title=True):
 passed data. return the width and height occupied by the new table. """
 def create_table(sheet, table_title, column_headers, data, row_start, column_start, formats):
 	#first we need to determine the table dimensions
-	print("================")
-	print(data)
+	print("making table ", table_title)
 	data = dictdata_to_listdata(data)
-	width = 9
+	width = 11
 	height = len(data)
-
-	print(data)
-	print(column_headers)
-	print("===============\n")
-
 	width -= 1 #I don't know why I have to do this ???
 
 	#create the table title
@@ -57,7 +51,6 @@ def create_table(sheet, table_title, column_headers, data, row_start, column_sta
 	sheet.set_column(column_start, column_start, 35) #widen the first column
 	sheet.set_column(column_start + width, column_start + width, 35) #widen the last column
 
-	print(data)
 	#create the table
 	sheet.add_table(
 		row_start, column_start,
@@ -68,7 +61,7 @@ def create_table(sheet, table_title, column_headers, data, row_start, column_sta
 
 def generate_combined_case_headers(format):
 	column_headers = [{'header': f'ds{ds}', 'format': format} for ds in range(1, 10)]
-	column_headers = [{'header': 'Algorithm'}] + column_headers
+	column_headers = [{'header': 'Algorithm'}] + column_headers + [{'header': 'Algorithm '}]
 	return column_headers
 
 def parse_time(timestamp):
@@ -79,7 +72,7 @@ def parse_time(timestamp):
 
 
 #first we load the result dir tree into a dictionary format
-def make_root_excel_summary(res_dir):
+def make_root_excel_summary(res_dir, make_xlsx=True, make_graphs=False):
 	print("making root results for " + res_dir)
 	results = OrderedDict()
 
@@ -96,11 +89,11 @@ def make_root_excel_summary(res_dir):
 			subsubresults = OrderedDict()
 
 			for algorithm_name in sorted(os.listdir(os.path.join(res_dir, popsize_name, dataset_name))):
-				if os.path.getsize(os.path.join(res_dir, popsize_name, dataset_name, algorithm_name)) > 2500000:
-					print("				file too large, skipping")
-					break
-
 				print("            current algorithm is: " + algorithm_name)
+				if os.path.getsize(os.path.join(res_dir, popsize_name, dataset_name, algorithm_name)) > 3000000:
+					print("				file too large, skipping")
+					continue
+
 				try:
 					string_val = open(os.path.join(res_dir, popsize_name,
 									  dataset_name, algorithm_name), "r").read()
@@ -118,7 +111,7 @@ def make_root_excel_summary(res_dir):
 		results[popsize_name] = subresults
 
 	#===========================================fill the excel file in with data
-	if False:
+	if make_xlsx:
 		workbook = xlsxwriter.Workbook(os.path.join(res_dir, 'summary.xlsx'), {'nan_inf_to_errors': True})
 		formats = add_formats(workbook)
 
@@ -130,23 +123,21 @@ def make_root_excel_summary(res_dir):
 			worksheet = workbook.add_worksheet(popsize)
 
 			#now get a list of all metaheuristics that ran for this popsize
-			dataset_metaheuristics = OrderedDict()
+			dataset_metaheuristic_percentages = OrderedDict()
+			dataset_metaheuristic_exclusions = OrderedDict()
 			for dataset in results[popsize]:
 				for meta_name in results[popsize][dataset]:
-					print("			recording existence of ", meta_name)
-					dataset_metaheuristics[meta_name] = [[]] * 9
-
-			print(dataset_metaheuristics)
+					dataset_metaheuristic_percentages[meta_name] = [[]] * 9
+					dataset_metaheuristic_exclusions[meta_name] = [[]] * 9
 
 			#fill in the list of metas that ran with summary stats
 			#for all the results we have
-			print("    calculating summary stats...")
-			for meta_name in dataset_metaheuristics:
+			for meta_name in dataset_metaheuristic_percentages:
 				for dataset in results[popsize]:
 					try:
-						dataset_i = int(dataset[8:])
+						dataset_i = int(dataset[8:]) # strip "dataset_"
 					except ValueError:
-						continue
+						continue #its not a result folder
 					try:
 						data = results[popsize][dataset][meta_name]
 						percents = [(get_optimal(s["problem"])-s["best_ten"][0]["score"])/s["best_ten"][0]["score"]
@@ -157,64 +148,64 @@ def make_root_excel_summary(res_dir):
 
 
 					mean_value = np.mean([p for p in percents if p >= 0])
-					dataset_metaheuristics[meta_name][dataset_i-1] = mean_value
+					exclusions = sum([1 for p in percents if p < 0])
+					dataset_metaheuristic_percentages[meta_name][dataset_i-1] = mean_value
+					dataset_metaheuristic_exclusions[meta_name][dataset_i-1] = exclusions
 
-
-			print(dataset_metaheuristics)
 			#we need to replace [] with "" in the empty case
-			for key in dataset_metaheuristics:
-				for i, result in enumerate(dataset_metaheuristics[key]):
+			for key in dataset_metaheuristic_percentages:
+				for i, result in enumerate(dataset_metaheuristic_percentages[key]):
 					if result == []:
-						dataset_metaheuristics[key][i] = ""
+						dataset_metaheuristic_percentages[key][i] = ""
 
-			print("    writing data... ")
-			print("    ", dataset_metaheuristics)
 			percentage_headers = generate_combined_case_headers(formats["percent"])
-			x, y = create_table(worksheet, "Combined Cases Percentage Averages", percentage_headers, dataset_metaheuristics, 0, 0, formats)
+			default_headers = generate_combined_case_headers(formats["default"])
+			row, column = create_table(worksheet, "Combined Cases Percentage Averages", percentage_headers, dataset_metaheuristic_percentages, 0, 0, formats)
+			row, column = create_table(worksheet, "Amount of Problems Excluded From Means", default_headers, dataset_metaheuristic_exclusions, row+1, 0, formats)
 
 		print("closing workbook...")
 		workbook.close()
-		print("")
+		print("workbook closed. ")
 
 	#====================================================make the summary graphs
-	for ps in results:
-		for ds in results[ps]:
-			for meta in results[ps][ds]:
-				lines = []
-				for problem in results[ps][ds][meta][1:6]:
-					optimal = get_optimal(problem["problem"])
-					times, scores, best_encountered = [], [], []
-					start_time = parse_time(problem["timeframe_results"][0][0])
-					for (time, score) in problem["timeframe_results"]:
-						elapsed_time = parse_time(time) - start_time
-						if score < 0 or optimal < 0:
-							percent = None
-						else:
-							percent = (optimal - score)/optimal
+	if make_graphs:
+		for ps in results:
+			for ds in results[ps]:
+				for meta in results[ps][ds]:
+					lines = []
+					for problem in results[ps][ds][meta][1:6]:
+						optimal = get_optimal(problem["problem"])
+						times, scores, best_encountered = [], [], []
+						start_time = parse_time(problem["timeframe_results"][0][0])
+						for (time, score) in problem["timeframe_results"]:
+							elapsed_time = parse_time(time) - start_time
+							if score < 0 or optimal < 0:
+								percent = None
+							else:
+								percent = (optimal - score)/optimal
 
-						raw_percent = (optimal - score)/optimal
+							raw_percent = (optimal - score)/optimal
 
-						if len(best_encountered) == 0 or raw_percent < best_encountered[-1]:
-							best_encountered.append(raw_percent)
-						else:
-							best_encountered.append(best_encountered[-1])
-						times.append(elapsed_time.microseconds)
-						scores.append(percent)
-					times = list(range(len(scores)))
-					plt.plot(times, best_encountered)
+							if len(best_encountered) == 0 or raw_percent < best_encountered[-1]:
+								best_encountered.append(raw_percent)
+							else:
+								best_encountered.append(best_encountered[-1])
+							times.append(elapsed_time.microseconds)
+							scores.append(percent)
+						times = list(range(len(scores)))
+						plt.plot(times, scores)
 
-				plt.title(meta + " best encountered scores")
-				plt.rcParams["figure.figsize"] = (7,7)
-				plt.savefig(os.path.join(res_dir, ps, ds, f"graph_best_{meta}.png"),
-						dpi=300)
-				plt.clf()
-
-
-
+					plt.title(meta + " scores over time")
+					plt.rcParams["figure.figsize"] = (7,7)
+					plt.savefig(os.path.join(res_dir, ps, ds, f"graph_score_{meta}.png"),
+							dpi=300)
+					plt.clf()
 
 def make_root_excel_summaries(res_dir):
 	results = {}
 	for folder in reversed(list(os.listdir(res_dir))):
 		make_root_excel_summary(os.path.join(res_dir, folder))
 
-make_root_excel_summaries(results_dir)
+
+for results_dir in results_dirs:
+	make_root_excel_summaries(results_dir)
