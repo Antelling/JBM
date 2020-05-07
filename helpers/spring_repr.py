@@ -6,6 +6,7 @@ from matplotlib import pyplot as plt
 from datetime import datetime
 
 results_dirs = ["../results/Rao2", "../results/Rao1", "../results/CAC"]
+results_dirs = ["../results/rao1_p30_tl120", "../results/rao1_p60_tl120", "../rao2_p60_tl120", "../rao2_p30_tl120"]
 
 
 def add_formats(workbook):

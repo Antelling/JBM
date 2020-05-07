@@ -2,7 +2,8 @@ import xlsxwriter
 import json, os
 import numpy as np
 
-results_dir = "../results/rao1_narrow_survey"
+dirname = "rao2_p30_t120"
+results_dir = "../results/" + dirname
 optimals_path = "../benchmark_problems/new_opts.json"
 
 def switch_order(results):
@@ -13,7 +14,7 @@ def switch_order(results):
     return new_list
 
 
-workbook = xlsxwriter.Workbook('rao1_narrow.xlsx')
+workbook = xlsxwriter.Workbook(dirname + '.xlsx')
 
 negative_format = workbook.add_format({'bg_color': 'green'})
 normal_format = workbook.add_format({})
@@ -24,6 +25,8 @@ deemph_format = workbook.add_format({'font_color': 'gray'})
 optimals = json.loads(open(optimals_path).read())
 
 for file in os.listdir(results_dir):
+    if "genimps" in file:
+        continue
     short_file = file.replace(".json", "")
     sheet = workbook.add_worksheet(short_file)
     dataset = file[2]
@@ -33,7 +36,9 @@ for file in os.listdir(results_dir):
     results = json.loads(file.read())
     file.close()
 
+
     for alg in results:
+        print("alg is", alg)
         results[alg] = switch_order(results[alg])
 
     row = 0
