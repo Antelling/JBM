@@ -30,16 +30,24 @@ class Trial(object):
         self.attributes["mixed_cost"] = problem_id["case"] > 3
 
         #result derived attributes
-        self.attributes["found_score"] = best = self.genimps[-1][1]
+        try:
+            self.attributes["found_score"] = best = self.genimps[-1][1]
+        except IndexError:
+            self.attributes["found_score"] = -1
         self.attributes["optimal_score"] = opts.get_optimal(self.problem_id)
         self.attributes["percentage"] = (self.attributes["optimal_score"] - self.attributes["found_score"]) / self.attributes["optimal_score"]
         self.attributes["feasible"] = self.attributes["optimal_score"] > 0 and self.attributes["found_score"] > 0
         self.attributes["elapsed_time"] = elapsed_time
 
         #algorithm configuration attributes 
-        self.attributes["metaheuristic"] = re.match(r"^(\S+) ", meta_name).group(1)
-        self.attributes["n_param"] = re.match(r".*top(\d+)", meta_name).group(1)
-        self.attributes["local_search"] = re.match(r"^\S+ \S+ \S+ (.+)", meta_name).group(1)
+        try:
+            self.attributes["metaheuristic"] = re.match(r"^(\S+) ", meta_name).group(1)
+            self.attributes["n_param"] = re.match(r".*top(\d+)", meta_name).group(1)
+            self.attributes["local_search"] = re.match(r"^\S+ \S+ \S+ (.+)", meta_name).group(1)
+        except AttributeError: #happens when meta name is "control"
+            self.attributes['metaheuristic'] = "control"
+            self.attributes['n_param'] = 0
+            self.attributes['local_search'] = "none"
         
         self.attributes["popsize"] = re.match(r".*p(\d+)", folder_name).group(1)
         self.attributes["time_limit"] = re.match(r".*tl?(\d+)", folder_name).group(1)
@@ -64,15 +72,13 @@ class TrialSet(object):
         return set([t.attributes[attribute] for t in self.trials])
 
 
-"""load an experiment saved in the genimp format"""
-def load_genimps(filepath, trialset):
-    opts = OptimalSet()
+    """load an experiment saved in the genimp format"""
+    def load_genimps(self, filepath):
+        opts = OptimalSet()
 
-    for file in os.listdir(filepath):
-        if "genimps" in file: 
-            data = json.loads(open(os.path.join(filepath, file), "r").read())
-            for result in data: 
-                result = Trial(*result, filepath, opts)
-                trialset.add_result(result)
-
-            experiment.add_dataset(dataset_result)
+        for file in os.listdir(filepath):
+            if "genimps" in file: 
+                data = json.loads(open(os.path.join(filepath, file), "r").read())
+                for result in data: 
+                    result = Trial(*result, filepath, opts)
+                    self.add_trial(result)

@@ -1,35 +1,7 @@
 import xlsxwriter 
 import numpy as np
 
-class Book(object):
-    def add_sheet(self, sheet_name):
-        sheet = self.workbook.add_worksheet(sheet_name)
-        self.sheets[sheet_name] = Sheet(self, sheet)
-        return self.sheets[sheet_name]
 
-    def save(self):
-        self.workbook.close()
-
-    def _add_formats(self):
-        self.percentage_format = self.workbook.add_format({'num_format': '0.00%'})
-        self.title_format = self.workbook.add_format({'bold': True, 'align': 'center', 'font_size': 20, 'valign': 'center'})
-        self.default_format = self.workbook.add_format({})
-
-        self._section_format_a = self.workbook.add_format({'bold': True, 'align': 'center', 'bg_color': '#e8e9d8', 'border_color': 'white', 'border': 3}) # gray yellowD
-        self._section_format_b = self.workbook.add_format({'bold': True, 'align': 'center', 'bg_color': '#ffcbc4', 'border_color': 'white', 'border': 3}) # peach 
-        self._section_switch = True 
-
-    def next_section_format(self):
-        self._section_switch = not self._section_switch 
-        return self._section_format_a if self._section_switch else self._section_format_b
-
-    def get_section_format(self):
-        return self._section_format_a if self._section_switch else self._section_format_b
-
-    def __init__(self, filename):
-        self.workbook = xlsxwriter.Workbook(filename + '.xlsx', {'nan_inf_to_errors': True})
-        self.sheets = {}
-        self._add_formats()
 
 class Sheet(object):
     """book is the parent object of this sheet, sheet is the workbook sheet object this 
@@ -42,6 +14,7 @@ class Sheet(object):
         self.new_top = 0 #rocord how far down the current row has ensorceled
         self.left  = 0 #record how far right into the notebook the current row has enpopulated
 
+        #the title of the current section. Will be written when creating a new section. 
         self.section_title = ""
 
 
@@ -57,10 +30,10 @@ class Sheet(object):
                 self.sheet.write(row, 0, " ", self.book.get_section_format())
         
         self.top = self.new_top + 2
-        self.section_title = section_name
         if section_name:
             self.left = 1
             self.book.next_section_format()
+            self.section_title = section_name
         else:
             self.left = 0
 
@@ -120,6 +93,41 @@ class Sheet(object):
         #current section, we need to update the new_top variable
         self.new_top = max(self.top + height + 1, self.new_top)
 
+    def add_table(self, table, title="Table", headers=None):
+        #turn table into list of list thing that the sheet object wants
+        header_names = list(table[list(table.keys())[0]].keys())
+        rows = []
+        for row_name, row_contents in table.items():
+            rows.append([row_name] + [row_contents[hn] for hn in header_names])
+        
+        #determine width and height
+        width = len(rows[0]) - 1
+        height = len(rows)
+
+        #create the table title
+        self.sheet.merge_range(self.top, self.left, self.top, 
+            self.left + width, title, self.book.get_section_format())
+
+        #add the table
+        if headers:
+            self.sheet.add_table(
+                self.top+1, self.left,
+                self.top + height+1, self.left + width,
+                {'data': rows, 'columns': headers})
+        else:
+            self.sheet.add_table(
+                self.top+1, self.left,
+                self.top + height+1, self.left + width,
+                {'data': rows})
+
+        #leave a gap between this table and the next one
+        self.left += width + 2
+
+        #if this table was higher than the previous tallest thing we added to the 
+        #current section, we need to update the new_top variable
+        self.new_top = max(self.top + height + 1, self.new_top)
+        
+
     def add_big_title(self, title, width):
         #create the table title
         self.sheet.merge_range(self.top, self.left, self.top + 1, 
@@ -129,3 +137,35 @@ class Sheet(object):
 
     def add_image(self, filepath):
         pass
+
+    
+
+class Book(object):
+    def add_sheet(self, sheet_name) -> Sheet:
+        sheet = self.workbook.add_worksheet(sheet_name)
+        self.sheets[sheet_name] = Sheet(self, sheet)
+        return self.sheets[sheet_name]
+
+    def save(self):
+        self.workbook.close()
+
+    def _add_formats(self):
+        self.percentage_format = self.workbook.add_format({'num_format': '0.00%'})
+        self.title_format = self.workbook.add_format({'bold': True, 'align': 'center', 'font_size': 20, 'valign': 'center'})
+        self.default_format = self.workbook.add_format({})
+
+        self._section_format_a = self.workbook.add_format({'bold': True, 'align': 'center', 'bg_color': '#e8e9d8', 'border_color': 'white', 'border': 3}) # gray yellowD
+        self._section_format_b = self.workbook.add_format({'bold': True, 'align': 'center', 'bg_color': '#ffcbc4', 'border_color': 'white', 'border': 3}) # peach 
+        self._section_switch = True 
+
+    def next_section_format(self):
+        self._section_switch = not self._section_switch 
+        return self._section_format_a if self._section_switch else self._section_format_b
+
+    def get_section_format(self):
+        return self._section_format_a if self._section_switch else self._section_format_b
+
+    def __init__(self, filename):
+        self.workbook = xlsxwriter.Workbook(filename + '.xlsx', {'nan_inf_to_errors': True})
+        self.sheets = {}
+        self._add_formats()
